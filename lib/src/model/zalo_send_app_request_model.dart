@@ -1,20 +1,22 @@
 import 'zalo_error_model.dart';
 
 class ZaloSendAppRequest {
-  bool? isSuccess;
-  ZaloError? error;
-  ZaloSendAppRequestData? data;
-
   ZaloSendAppRequest.fromJson(Map<dynamic, dynamic>? json) {
-    if (json == null) return;
+    if (json == null) {
+      return;
+    }
     isSuccess = json['isSuccess'] as bool?;
     error = ZaloError.fromJson(json['error'] as Map<dynamic, dynamic>?);
     data =
         ZaloSendAppRequestData.fromJson(json['data'] as Map<dynamic, dynamic>?);
   }
 
+  bool? isSuccess;
+  ZaloError? error;
+  ZaloSendAppRequestData? data;
+
   Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
+    final Map<String, dynamic> map = <String, dynamic>{};
     map['isSuccess'] = isSuccess;
     map['error'] = error?.toJson();
     map['data'] = data?.toJson();
@@ -23,31 +25,29 @@ class ZaloSendAppRequest {
 }
 
 class ZaloSendAppRequestData {
-  int? error;
-  String? errorName;
-  String? errorReason;
-  String? errorDescription;
-  String? message;
-  List<String>? to;
-
   ZaloSendAppRequestData.fromJson(Map<dynamic, dynamic>? json) {
-    if (json == null) return;
+    if (json == null) {
+      return;
+    }
     error = json['error'] as int?;
     errorName = json['error_name'] as String?;
     errorReason = json['error_reason'] as String?;
     errorDescription = json['error_description'] as String?;
     message = json['message'] as String?;
-    if (json['to'] != null) {
+    final List<dynamic> toList = json['to'] as List<dynamic>;
+    if (toList != null) {
       to = <String>[];
-      json['to'].forEach((v) {
-        final rs = v as String?;
-        if (rs != null) to?.add(rs);
-      });
+      for (final dynamic v in toList) {
+        final String? rs = v as String?;
+        if (rs != null) {
+          to!.add(rs);
+        }
+      }
     }
   }
 
   Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
+    final Map<String, dynamic> map = <String, dynamic>{};
     map['error'] = error;
     map['error_name'] = errorName;
     map['error_reason'] = errorReason;
@@ -56,4 +56,11 @@ class ZaloSendAppRequestData {
     map['to'] = to;
     return map;
   }
+
+  int? error;
+  String? errorName;
+  String? errorReason;
+  String? errorDescription;
+  String? message;
+  List<String>? to;
 }
