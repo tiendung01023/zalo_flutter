@@ -6,9 +6,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:zalo_flutter/zalo_flutter.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
@@ -27,9 +29,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var _indexReset = -1;
-  var _key = const ValueKey('');
-  
+  int _indexReset = -1;
+  ValueKey<String> _key = const ValueKey<String>('');
+
+  String zaloId = '';
+  String zaloMessage = '';
+  String zaloLink = '';
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _initZaloFlutter() async {
     if (Platform.isAndroid) {
-      final hashKey = await ZaloFlutter.getHashKeyAndroid();
+      final String? hashKey = await ZaloFlutter.getHashKeyAndroid();
       log('HashKey: $hashKey');
     }
   }
@@ -58,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   text: 'clear log',
                   onPressed: () async {
                     _indexReset++;
-                    _key = ValueKey(_indexReset.toString());
+                    _key = ValueKey<String>(_indexReset.toString());
                     setState(() {});
                     return null;
                   },
@@ -68,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: () async {
                     await ZaloFlutter.logout();
                     _indexReset++;
-                    _key = ValueKey(_indexReset.toString());
+                    _key = ValueKey<String>(_indexReset.toString());
                     setState(() {});
                     return null;
                   },
@@ -76,28 +82,29 @@ class _MyHomePageState extends State<MyHomePage> {
                 CommonButton(
                   text: 'isLogin',
                   onPressed: () async {
-                    final data = await ZaloFlutter.isLogin();
+                    final bool data = await ZaloFlutter.isLogin();
                     return '$data';
                   },
                 ),
                 CommonButton(
                   text: 'login',
                   onPressed: () async {
-                    final data = await ZaloFlutter.login();
+                    final ZaloLogin data = await ZaloFlutter.login();
                     return jsonEncode(data.toJson());
                   },
                 ),
                 CommonButton(
                   text: 'getUserProfile',
                   onPressed: () async {
-                    final data = await ZaloFlutter.getUserProfile();
+                    final ZaloProfile data = await ZaloFlutter.getUserProfile();
                     return jsonEncode(data.toJson());
                   },
                 ),
                 CommonButton(
                   text: 'getUserFriendList',
                   onPressed: () async {
-                    final data = await ZaloFlutter.getUserFriendList(
+                    final ZaloUserFriend data =
+                        await ZaloFlutter.getUserFriendList(
                       atOffset: 0,
                       count: 3,
                     );
@@ -107,45 +114,47 @@ class _MyHomePageState extends State<MyHomePage> {
                 CommonButton(
                   text: 'getUserInvitableFriendList',
                   onPressed: () async {
-                    final data = await ZaloFlutter.getUserInvitableFriendList(
+                    final ZaloUserFriend data =
+                        await ZaloFlutter.getUserInvitableFriendList(
                       atOffset: 0,
                       count: 3,
                     );
-                    final rs = jsonEncode(data.toJson());
+                    final String rs = jsonEncode(data.toJson());
                     return rs;
                   },
                 ),
                 CommonButton(
                   text: 'sendMessage',
                   onPressed: () async {
-                    final data = await ZaloFlutter.sendMessage(
-                      to: "2961857761415564889",
-                      message: "Hello",
-                      link: "www.google.com",
+                    final ZaloSendMessage data = await ZaloFlutter.sendMessage(
+                      to: zaloId,
+                      message: zaloMessage,
+                      link: zaloLink,
                     );
-                    final rs = jsonEncode(data.toJson());
+                    final String rs = jsonEncode(data.toJson());
                     return rs;
                   },
                 ),
                 CommonButton(
                   text: 'postFeed',
                   onPressed: () async {
-                    final data = await ZaloFlutter.postFeed(
-                      message: "Hello",
-                      link: "www.google.com",
+                    final ZaloPostFeed data = await ZaloFlutter.postFeed(
+                      message: zaloMessage,
+                      link: zaloLink,
                     );
-                    final rs = jsonEncode(data.toJson());
+                    final String rs = jsonEncode(data.toJson());
                     return rs;
                   },
                 ),
                 CommonButton(
                   text: 'sendAppRequest',
                   onPressed: () async {
-                    final data = await ZaloFlutter.sendAppRequest(
-                      to: ["514969331990175590"],
-                      message: "Hello",
+                    final ZaloSendAppRequest data =
+                        await ZaloFlutter.sendAppRequest(
+                      to: <String>[zaloId],
+                      message: zaloMessage,
                     );
-                    final rs = jsonEncode(data.toJson());
+                    final String rs = jsonEncode(data.toJson());
                     return rs;
                   },
                 ),
@@ -159,16 +168,16 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class CommonButton extends StatefulWidget {
-  final String text;
-  final Future<String?> Function() onPressed;
-  final Color color;
-
   const CommonButton({
     Key? key,
     required this.text,
     required this.onPressed,
     this.color = Colors.blue,
   }) : super(key: key);
+
+  final String text;
+  final Future<String?> Function() onPressed;
+  final Color color;
 
   @override
   _CommonButtonState createState() => _CommonButtonState();
@@ -179,7 +188,7 @@ class _CommonButtonState extends State<CommonButton> {
 
   @override
   Widget build(BuildContext context) {
-    final childText = Text(
+    final Widget childText = Text(
       widget.text,
       style: const TextStyle(
         color: Colors.white,
@@ -187,7 +196,7 @@ class _CommonButtonState extends State<CommonButton> {
       ),
     );
 
-    final button = MaterialButton(
+    final Widget button = MaterialButton(
       minWidth: double.infinity,
       height: 40,
       color: widget.color,
@@ -202,16 +211,19 @@ class _CommonButtonState extends State<CommonButton> {
     );
 
     Widget showResult(String? text) {
-      if (text == null) return Container();
-      final object = jsonDecode(text);
-      final prettyString = const JsonEncoder.withIndent('  ').convert(object);
+      if (text == null) {
+        return Container();
+      }
+      final String? object = jsonDecode(text) as String?;
+      final String prettyString =
+          const JsonEncoder.withIndent('  ').convert(object);
       return Text(prettyString);
     }
 
     return Padding(
       padding: const EdgeInsets.all(6.0),
       child: Column(
-        children: [
+        children: <Widget>[
           button,
           showResult(result),
         ],

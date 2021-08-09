@@ -2,41 +2,33 @@ import 'zalo_error_model.dart';
 import 'zalo_picture_model.dart';
 
 class ZaloProfile {
-  bool? isSuccess;
-  ZaloError? error;
-  ZaloProfileData? data;
-
   ZaloProfile.fromJson(Map<dynamic, dynamic>? map) {
-    if (map == null) return;
+    if (map == null) {
+      return;
+    }
     isSuccess = map['isSuccess'] as bool?;
     error = ZaloError.fromJson(map['error'] as Map<dynamic, dynamic>?);
     data = ZaloProfileData.fromJson(map['data'] as Map<dynamic, dynamic>?);
   }
 
   Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
+    final Map<String, dynamic> map = <String, dynamic>{};
     map['isSuccess'] = isSuccess;
     map['error'] = error?.toJson();
     map['data'] = data?.toJson();
     return map;
   }
+
+  bool? isSuccess;
+  ZaloError? error;
+  ZaloProfileData? data;
 }
 
 class ZaloProfileData {
-  int? error;
-  String? errorName;
-  String? errorReason;
-  String? errorDescription;
-  String? message;
-
-  String? id;
-  String? name;
-  String? gender;
-  String? birthday;
-  ZaloPicture? picture;
-
   ZaloProfileData.fromJson(Map<dynamic, dynamic>? map) {
-    if (map == null) return;
+    if (map == null) {
+      return;
+    }
     error = map['error'] as int?;
     errorName = map['error_name'] as String?;
     errorReason = map['error_reason'] as String?;
@@ -51,7 +43,7 @@ class ZaloProfileData {
   }
 
   Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
+    final Map<String, dynamic> map = <String, dynamic>{};
     map['error'] = error;
     map['error_name'] = errorName;
     map['error_reason'] = errorReason;
@@ -65,4 +57,16 @@ class ZaloProfileData {
     map['picture'] = picture?.toJson();
     return map;
   }
+
+  int? error;
+  String? errorName;
+  String? errorReason;
+  String? errorDescription;
+  String? message;
+
+  String? id;
+  String? name;
+  String? gender;
+  String? birthday;
+  ZaloPicture? picture;
 }
