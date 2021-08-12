@@ -2,3 +2,5 @@
 Init project
 ## 0.0.2
 Fix lint and update description
+## 0.0.2
+Fix example
