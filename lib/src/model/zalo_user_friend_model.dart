@@ -35,7 +35,7 @@ class ZaloUserFriendData {
     errorReason = json['error_reason'] as String?;
     errorDescription = json['error_description'] as String?;
     message = json['message'] as String?;
-    final List<dynamic> dataList = json['data'] as List<dynamic>;
+    final List<dynamic>? dataList = json['data'] as List<dynamic>?;
     if (dataList != null) {
       data = <ZaloUserFriendData2>[];
       for (final dynamic v in dataList) {

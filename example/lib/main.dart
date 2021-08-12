@@ -83,7 +83,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   text: 'isLogin',
                   onPressed: () async {
                     final bool data = await ZaloFlutter.isLogin();
-                    return '$data';
+                    final String? x = data.toString();
+                    return x;
                   },
                 ),
                 CommonButton(
@@ -202,9 +203,12 @@ class _CommonButtonState extends State<CommonButton> {
       color: widget.color,
       padding: const EdgeInsets.all(16),
       onPressed: () async {
-        print('[commonButton] ${widget.text}');
+        _showLoading(context);
+        final DateTime time = DateTime.now();
+        print('[$time][commonButton] ${widget.text}');
         result = await widget.onPressed();
         setState(() {});
+        Navigator.pop(context);
       },
       shape: const StadiumBorder(),
       child: childText,
@@ -214,10 +218,15 @@ class _CommonButtonState extends State<CommonButton> {
       if (text == null) {
         return Container();
       }
-      final String? object = jsonDecode(text) as String?;
-      final String prettyString =
-          const JsonEncoder.withIndent('  ').convert(object);
-      return Text(prettyString);
+      String data;
+      try {
+        final Map<String, dynamic>? object =
+            jsonDecode(text) as Map<String, dynamic>?;
+        data = const JsonEncoder.withIndent('  ').convert(object);
+      } catch (e) {
+        data = text;
+      }
+      return Text(data);
     }
 
     return Padding(
@@ -228,6 +237,18 @@ class _CommonButtonState extends State<CommonButton> {
           showResult(result),
         ],
       ),
+    );
+  }
+
+  Future<void> _showLoading(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
     );
   }
 }

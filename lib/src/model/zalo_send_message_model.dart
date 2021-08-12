@@ -7,7 +7,7 @@ class ZaloSendMessage {
     }
     isSuccess = json['isSuccess'] as bool?;
     error = ZaloError.fromJson(json['error'] as Map<dynamic, dynamic>?);
-    data = _Data.fromJson(json['data'] as Map<dynamic, dynamic>?);
+    data = ZaloSendMessageData.fromJson(json['data'] as Map<dynamic, dynamic>?);
   }
 
   Map<String, dynamic> toJson() {
@@ -20,11 +20,11 @@ class ZaloSendMessage {
 
   bool? isSuccess;
   ZaloError? error;
-  _Data? data;
+  ZaloSendMessageData? data;
 }
 
-class _Data {
-  _Data.fromJson(Map<dynamic, dynamic>? json) {
+class ZaloSendMessageData {
+  ZaloSendMessageData.fromJson(Map<dynamic, dynamic>? json) {
     if (json == null) {
       return;
     }

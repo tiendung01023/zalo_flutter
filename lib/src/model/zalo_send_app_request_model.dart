@@ -34,7 +34,7 @@ class ZaloSendAppRequestData {
     errorReason = json['error_reason'] as String?;
     errorDescription = json['error_description'] as String?;
     message = json['message'] as String?;
-    final List<dynamic> toList = json['to'] as List<dynamic>;
+    final List<dynamic>? toList = json['to'] as List<dynamic>?;
     if (toList != null) {
       to = <String>[];
       for (final dynamic v in toList) {
