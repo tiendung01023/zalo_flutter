@@ -1,14 +1,13 @@
 package com.tiendung01023.zalo_flutter
 
+import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.Dialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Base64
 import android.util.Log
 import androidx.annotation.NonNull
 import com.zing.zalo.zalosdk.oauth.*
-import com.zing.zalo.zalosdk.oauth.model.ErrorResponse
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -19,6 +18,7 @@ import io.flutter.plugin.common.MethodChannel.Result
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.lang.Exception
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
@@ -59,23 +59,28 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     override fun onDetachedFromActivity() {}
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-        when (call.method) {
-            "getHashKey" -> getHashKey(result)
-            "logout" -> logout(result)
-            "isAuthenticated" -> isAuthenticated(result)
-            "login" -> login(result)
-            "getUserProfile" -> getUserProfile(result)
-            "getUserFriendList" -> getUserFriendList(call, result)
-            "getUserInvitableFriendList" -> getUserInvitableFriendList(call, result)
-            "sendMessage" -> sendMessage(call, result)
-            "postFeed" -> postFeed(call, result)
-            "sendAppRequest" -> sendAppRequest(call, result)
-            else -> {
-                result.notImplemented()
+        try {
+            when (call.method) {
+                "getHashKey" -> getHashKey(result)
+                "logout" -> logout(result)
+                "isAuthenticated" -> isAuthenticated(result)
+                "login" -> login(result)
+                "getUserProfile" -> getUserProfile(result)
+                "getUserFriendList" -> getUserFriendList(call, result)
+                "getUserInvitableFriendList" -> getUserInvitableFriendList(call, result)
+                "sendMessage" -> sendMessage(call, result)
+                "postFeed" -> postFeed(call, result)
+                "sendAppRequest" -> sendAppRequest(call, result)
+                else -> {
+                    result.notImplemented()
+                }
             }
+        } catch (e: Exception) {
+            result.success(null)
         }
     }
 
+    @Throws(Exception::class)
     private fun getHashKey(result: Result) {
         val key = AppHelper.getHashKey(context)
         Log.v(
@@ -94,7 +99,7 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         result.success(key)
     }
 
-
+    @Throws(Exception::class)
     private fun login(result: Result) {
         val listener: OAuthCompleteListener = object : OAuthCompleteListener() {
             override fun onGetOAuthComplete(response: OauthResponse) {
@@ -131,20 +136,24 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         zaloInstance.authenticate(activity, LoginVia.APP_OR_WEB, listener)
     }
 
+    @Throws(Exception::class)
     private fun isAuthenticated(result: Result) {
         zaloInstance.isAuthenticate { validated, _, _, _ -> result.success(validated) }
     }
 
+    @Throws(Exception::class)
     private fun logout(result: Result) {
         zaloInstance.unauthenticate()
         result.success(null)
     }
 
+    @Throws(Exception::class)
     private fun getUserProfile(result: Result) {
         val fields = arrayOf("id", "birthday", "gender", "picture", "name")
         zaloInstance.getProfile(context, withZOGraphCallBack(result), fields)
     }
 
+    @Throws(Exception::class)
     private fun getUserFriendList(call: MethodCall, result: Result) {
         val fields = arrayOf("id", "name", "gender", "picture")
         val arguments = call.arguments as Map<*, *>
@@ -159,6 +168,7 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         )
     }
 
+    @Throws(Exception::class)
     private fun getUserInvitableFriendList(call: MethodCall, result: Result) {
         val fields = arrayOf("id", "name", "gender", "picture")
         val arguments = call.arguments as Map<*, *>
@@ -173,6 +183,7 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         )
     }
 
+    @Throws(Exception::class)
     private fun sendMessage(call: MethodCall, result: Result) {
         val arguments = call.arguments as Map<*, *>
         val friendId = arguments["to"] as String?
@@ -181,6 +192,7 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         zaloOpenApi.sendMsgToFriend(context, friendId, msg, link, withZOGraphCallBack(result))
     }
 
+    @Throws(Exception::class)
     private fun postFeed(call: MethodCall, result: Result) {
         val arguments = call.arguments as Map<*, *>
         val message = arguments["message"] as String?
@@ -188,6 +200,7 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         zaloOpenApi.postToWall(context, link, message, withZOGraphCallBack(result))
     }
 
+    @Throws(Exception::class)
     private fun sendAppRequest(call: MethodCall, result: Result) {
         val arguments = call.arguments as Map<*, *>
         val friendListX = arguments["to"] as List<*>
@@ -197,19 +210,24 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         zaloInstance.inviteFriendUseApp(context, friendId, message, withZOGraphCallBack(result))
     }
 
+    @Throws(Exception::class)
     private fun withZOGraphCallBack(result: Result): ZaloOpenAPICallback {
-        return ZaloOpenAPICallback { response: JSONObject ->
+        return ZaloOpenAPICallback { response: JSONObject? ->
             try {
-                val data: Map<String, Any?> = AppHelper.jsonToMap(response)
-                val error: MutableMap<String, Any?> = HashMap()
-                val errorCode = data["error"] as Int
-                error["errorCode"] = errorCode
-                error["errorMessage"] = data["message"]
-                val map: MutableMap<String, Any?> = HashMap()
-                map["isSuccess"] = errorCode == 0
-                map["error"] = error
-                map["data"] = data
-                result.success(map)
+                if (response == null) {
+                    result.success(null)
+                } else {
+                    val data: Map<String, Any?> = AppHelper.jsonToMap(response)
+                    val error: MutableMap<String, Any?> = HashMap()
+                    val errorCode = data["error"] as Int
+                    error["errorCode"] = errorCode
+                    error["errorMessage"] = data["message"]
+                    val map: MutableMap<String, Any?> = HashMap()
+                    map["isSuccess"] = errorCode == 0
+                    map["error"] = error
+                    map["data"] = data
+                    result.success(map)
+                }
             } catch (e: JSONException) {
                 val error: MutableMap<String, Any?> = HashMap()
                 error["errorCode"] = -1
@@ -226,6 +244,8 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 }
 
 private object AppHelper {
+    @Suppress("DEPRECATION")
+    @SuppressLint("PackageManagerGetSignatures")
     fun getHashKey(@NonNull context: Context): String {
         try {
             val packageManager = context.packageManager
