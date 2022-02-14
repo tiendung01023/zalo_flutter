@@ -18,8 +18,26 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>Zalo</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>zalo-49043287940421924</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>zalosdk</string>
+		<string>zaloshareext</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -41,20 +59,6 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<!-- ZaloFlutter -->
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>zalo</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>zalo-49043287940421924</string>
-			</array>
-		</dict>
-	</array>
 	<key>ZaloAppID</key>
 	<string>49043287940421924</string>
 </dict>

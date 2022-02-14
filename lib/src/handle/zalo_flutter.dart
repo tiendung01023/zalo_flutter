@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+
 import '../model/model.dart';
 
+// ignore: avoid_classes_with_only_static_members
 class ZaloFlutter {
   static const MethodChannel channel = MethodChannel('zalo_flutter');
 
@@ -15,6 +17,7 @@ class ZaloFlutter {
       final String? rs = await channel.invokeMethod<String?>('getHashKey');
       return rs;
     }
+    return null;
   }
 
   /// * Đăng xuất - SDK xóa oauth code trong cache
@@ -29,8 +32,15 @@ class ZaloFlutter {
   /// * Check if authenticated
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/login/xac-minh-lai-oauth-code-post-427
   /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/login/xac-minh-lai-oauth-code-post-483
-  static Future<bool> isLogin() async {
-    final bool? rs = await channel.invokeMethod<bool?>('isAuthenticated');
+  static Future<bool> isLogin({
+    List<Object> externalInfo = const <Object>[],
+  }) async {
+    final bool? rs = await channel.invokeMethod<bool?>(
+      'isAuthenticated',
+      <String, dynamic>{
+        'ext_info': externalInfo,
+      },
+    );
     return rs == true;
   }
 
@@ -38,9 +48,13 @@ class ZaloFlutter {
   /// * Authenticate (with app or webview)
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/login/dang-nhap-bang-zalo-post-250
   /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/login/dang-nhap-post-480
-  static Future<ZaloLogin> login() async {
-    final Map<dynamic, dynamic>? rs =
-        await channel.invokeMethod<Map<dynamic, dynamic>?>('login');
+  static Future<ZaloLogin> login({
+    Map<String, dynamic> externalInfo = const <String, dynamic>{},
+  }) async {
+    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
+      'login',
+      <String, dynamic>{'ext_info': externalInfo},
+    );
     final ZaloLogin data = ZaloLogin.fromJson(rs);
     return data;
   }
@@ -50,8 +64,7 @@ class ZaloFlutter {
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/open-api/lay-thong-tin-nguoi-dung-post-435
   /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/lay-thong-tin-profile-post-490
   static Future<ZaloProfile> getUserProfile() async {
-    final Map<dynamic, dynamic>? rs =
-        await channel.invokeMethod<Map<dynamic, dynamic>?>('getUserProfile');
+    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>('getUserProfile');
     final ZaloProfile data = ZaloProfile.fromJson(rs);
     return data;
   }
@@ -64,8 +77,7 @@ class ZaloFlutter {
     required int atOffset,
     required int count,
   }) async {
-    final Map<dynamic, dynamic>? rs =
-        await channel.invokeMethod<Map<dynamic, dynamic>?>(
+    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'getUserFriendList',
       <String, dynamic>{
         'atOffset': atOffset,
@@ -84,8 +96,7 @@ class ZaloFlutter {
     required int atOffset,
     required int count,
   }) async {
-    final Map<dynamic, dynamic>? rs =
-        await channel.invokeMethod<Map<dynamic, dynamic>?>(
+    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'getUserInvitableFriendList',
       <String, dynamic>{
         'atOffset': atOffset,
@@ -105,8 +116,7 @@ class ZaloFlutter {
     required String message,
     String? link,
   }) async {
-    final Map<dynamic, dynamic>? rs =
-        await channel.invokeMethod<Map<dynamic, dynamic>?>(
+    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'sendMessage',
       <String, dynamic>{
         'to': to,
@@ -126,8 +136,7 @@ class ZaloFlutter {
     required String message,
     String? link,
   }) async {
-    final Map<dynamic, dynamic>? rs =
-        await channel.invokeMethod<Map<dynamic, dynamic>?>(
+    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'postFeed',
       <String, dynamic>{
         'message': message,
@@ -146,8 +155,7 @@ class ZaloFlutter {
     required List<String> to,
     required String message,
   }) async {
-    final Map<dynamic, dynamic>? rs =
-        await channel.invokeMethod<Map<dynamic, dynamic>?>(
+    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'sendAppRequest',
       <String, dynamic>{
         'to': to,
