@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:zalo_flutter/zalo_flutter.dart';
 
@@ -83,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   text: 'isLogin',
                   onPressed: () async {
                     final bool data = await ZaloFlutter.isLogin();
-                    final String? x = data.toString();
+                    final String x = data.toString();
                     return x;
                   },
                 ),
@@ -104,8 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 CommonButton(
                   text: 'getUserFriendList',
                   onPressed: () async {
-                    final ZaloUserFriend data =
-                        await ZaloFlutter.getUserFriendList(
+                    final ZaloUserFriend data = await ZaloFlutter.getUserFriendList(
                       atOffset: 0,
                       count: 3,
                     );
@@ -115,8 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 CommonButton(
                   text: 'getUserInvitableFriendList',
                   onPressed: () async {
-                    final ZaloUserFriend data =
-                        await ZaloFlutter.getUserInvitableFriendList(
+                    final ZaloUserFriend data = await ZaloFlutter.getUserInvitableFriendList(
                       atOffset: 0,
                       count: 3,
                     );
@@ -150,8 +147,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 CommonButton(
                   text: 'sendAppRequest',
                   onPressed: () async {
-                    final ZaloSendAppRequest data =
-                        await ZaloFlutter.sendAppRequest(
+                    final ZaloSendAppRequest data = await ZaloFlutter.sendAppRequest(
                       to: <String>[zaloId],
                       message: zaloMessage,
                     );
@@ -220,8 +216,7 @@ class _CommonButtonState extends State<CommonButton> {
       }
       String data;
       try {
-        final Map<String, dynamic>? object =
-            jsonDecode(text) as Map<String, dynamic>?;
+        final Map<String, dynamic>? object = jsonDecode(text) as Map<String, dynamic>?;
         data = const JsonEncoder.withIndent('  ').convert(object);
       } catch (e) {
         data = text;

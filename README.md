@@ -203,15 +203,43 @@ public class MyApplication extends Application {
 	</array>
 	<key>ZaloAppID</key>
 	<string>[ZaloAppID]</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>zalosdk</string>
+		<string>zaloshareext</string>
+	</array>
       <!-- ZaloFlutter end-->
 </dict>
 </plist>
 ```
 
-2. Open `ios/Runner.xcodeproj/project.pbxproj`, search `PRODUCT_BUNDLE_IDENTIFIER` and copy your **BundleID**
+2. Open `ios/Runner/AppDelegate.swift` file, add the following Zalo function code
+```swift
+import UIKit
+import Flutter
+import ZaloSDK
+
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate {
+    override func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        GeneratedPluginRegistrant.register(with: self)
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+    // Zalo function go here
+    override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        /// 0b. Receive callback from zalo
+        return ZDKApplicationDelegate.sharedInstance().application(app, open: url, options: options)
+    }
+}
+```
+
+3. Open `ios/Runner.xcodeproj/project.pbxproj`, search `PRODUCT_BUNDLE_IDENTIFIER` and copy your **BundleID**
 
 
-3. Open Zalo Dashboard => Login => IOS (https://developers.zalo.me/app/[ZaloAppID]/login)
+4. Open Zalo Dashboard => Login => IOS (https://developers.zalo.me/app/[ZaloAppID]/login)
 Paste **BundleID** to this page and press **Save**
 ![](readme_assets/7.png)
 
