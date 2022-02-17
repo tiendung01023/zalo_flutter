@@ -59,6 +59,21 @@ class ZaloFlutter {
     return data;
   }
 
+  /// * Đăng nhập mà không sử dụng tới accessToken (OAuth còn hiệu lực)
+  /// * Authenticate (with app or webview)
+  /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/dang-nhap/dang-nhap-post-6027
+  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/dang-nhap/dang-nhap-post-6006
+  static Future<ZaloLogin> loginWithoutAccessToken({
+    Map<String, dynamic> externalInfo = const <String, dynamic>{},
+  }) async {
+    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
+      'loginWithoutAccessToken',
+      <String, dynamic>{'ext_info': externalInfo},
+    );
+    final ZaloLogin data = ZaloLogin.fromJson(rs);
+    return data;
+  }
+
   /// * Lấy thông tin người dùng
   /// * Get Zalo user profile
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/open-api/lay-thong-tin-nguoi-dung-post-435

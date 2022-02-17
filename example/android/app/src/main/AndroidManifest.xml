@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.tiendung01023.zalo_flutter_example">
+    <queries>
+        <package android:name="com.zing.zalo" />
+    </queries>
    <application
         android:label="zalo_flutter_example"
         android:icon="@mipmap/ic_launcher"
@@ -10,7 +13,8 @@
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true">
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
                  while the Flutter UI initializes. After that, this theme continues
@@ -43,7 +47,8 @@
            android:name="com.zing.zalo.zalosdk.appID"
            android:value="@string/zalo_flutter_app_id" />
        <activity
-           android:name="com.zing.zalo.zalosdk.oauth.BrowserLoginActivity">
+           android:name="com.zing.zalo.zalosdk.oauth.BrowserLoginActivity"
+           android:exported="true">
            <intent-filter>
                <action android:name="android.intent.action.VIEW"/>
                <category android:name="android.intent.category.DEFAULT"/>

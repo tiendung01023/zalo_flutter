@@ -8,6 +8,7 @@ import android.util.Base64
 import android.util.Log
 import androidx.annotation.NonNull
 import com.zing.zalo.zalosdk.oauth.*
+import com.zing.zalo.zalosdk.oauth.model.ErrorResponse
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -18,7 +19,6 @@ import io.flutter.plugin.common.MethodChannel.Result
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.lang.Exception
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
@@ -64,16 +64,15 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 "getHashKey" -> getHashKey(result)
                 "logout" -> logout(result)
                 "isAuthenticated" -> isAuthenticated(result)
-                "login" -> login(result)
+                "login" -> login(call, result)
+                "loginWithoutAccessToken" -> loginWithoutAccessToken(call, result)
                 "getUserProfile" -> getUserProfile(result)
                 "getUserFriendList" -> getUserFriendList(call, result)
                 "getUserInvitableFriendList" -> getUserInvitableFriendList(call, result)
                 "sendMessage" -> sendMessage(call, result)
                 "postFeed" -> postFeed(call, result)
                 "sendAppRequest" -> sendAppRequest(call, result)
-                else -> {
-                    result.notImplemented()
-                }
+                else -> result.notImplemented()
             }
         } catch (e: Exception) {
             result.success(null)
@@ -100,49 +99,143 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     @Throws(Exception::class)
-    private fun login(result: Result) {
+    private fun login(call: MethodCall, result: Result) {
+        val arguments = call.arguments as HashMap<*, *>
+        val extInfo = arguments["ext_info"] as? HashMap<*, *>
+        AuthenUtils.shared.renewPKCECode()
+
         val listener: OAuthCompleteListener = object : OAuthCompleteListener() {
             override fun onGetOAuthComplete(response: OauthResponse) {
-                val error: MutableMap<String, Any?> = HashMap()
-                error["errorCode"] = response.errorCode
-                error["errorMessage"] = response.errorMessage
-                val data: MutableMap<String, Any?> = HashMap()
-                data["oauthCode"] = response.oauthCode
-                data["userId"] = response.getuId().toString()
-                data["isRegister"] = response.isRegister
-                data["type"] = response.channel.name
-                data["facebookAccessToken"] = response.facebookAccessToken
-                data["facebookAccessTokenExpiredDate"] = response.facebookExpireTime
-                data["socialId"] = response.socialId
-                val map: MutableMap<String, Any?> = HashMap()
-                map["isSuccess"] = true
-                map["error"] = error
-                map["data"] = data
-                result.success(map)
+                zaloInstance.getAccessTokenByOAuthCode(
+                    context,
+                    response.oauthCode,
+                    AuthenUtils.shared.getCodeVerifier()
+                ) {
+                    AuthenUtils.shared.saveTokenResponse(
+                        context,
+                        ZOTokenResponseObject.fromJson(it)
+                    )
+                    val error = mapOf<String, Any>(
+                        "errorCode" to response.errorCode,
+                        "errorMessage" to response.errorMessage,
+                    )
+
+                    val data = mapOf<String, Any>(
+                        "oauthCode" to response.oauthCode,
+                        "userId" to response.getuId().toString(),
+                        "isRegister" to response.isRegister,
+                        "type" to response.channel.name,
+                        "facebookAccessToken" to response.facebookAccessToken,
+                        "facebookAccessTokenExpiredDate" to response.facebookExpireTime,
+                        "socialId" to response.socialId,
+                    )
+                    val map = mapOf(
+                        "isSuccess" to true,
+                        "error" to error,
+                        "data" to data
+                    )
+
+                    result.success(map)
+                }
+
+
             }
 
-            override fun onAuthenError(errorCode: Int, message: String) {
-                val error: MutableMap<String, Any?> = HashMap()
-                error["errorCode"] = errorCode
-                error["errorMessage"] = message
-                val data: Map<String, Any> = HashMap()
-                val map: MutableMap<String, Any?> = HashMap()
-                map["isSuccess"] = false
-                map["error"] = error
-                map["data"] = data
+            override fun onAuthenError(e: ErrorResponse) {
+                val error = mapOf<String, Any>(
+                    "errorCode" to e.errorCode,
+                    "errorMessage" to e.errorMsg,
+                )
+                val data = mapOf<String, Any>()
+                val map = mapOf(
+                    "isSuccess" to false,
+                    "error" to error,
+                    "data" to data
+                )
                 result.success(map)
             }
         }
-        zaloInstance.authenticate(activity, LoginVia.APP_OR_WEB, listener)
+
+        zaloInstance.authenticateZaloWithAuthenType(
+            activity,
+            LoginVia.APP_OR_WEB,
+            AuthenUtils.shared.getCodeChallenge(),
+            if (extInfo != null) JSONObject(extInfo.toMap()) else null,
+            listener,
+        )
+    }
+
+    @Throws(Exception::class)
+    private fun loginWithoutAccessToken(call: MethodCall, result: Result) {
+        val arguments = call.arguments as HashMap<*, *>
+        val extInfo = arguments["ext_info"] as? HashMap<*, *>
+        AuthenUtils.shared.renewPKCECode()
+
+        val listener: OAuthCompleteListener = object : OAuthCompleteListener() {
+            override fun onGetOAuthComplete(response: OauthResponse) {
+                val error = mapOf<String, Any>(
+                    "errorCode" to response.errorCode,
+                    "errorMessage" to response.errorMessage,
+                )
+
+                val data = mapOf<String, Any>(
+                    "oauthCode" to response.oauthCode,
+                    "codeVerifier" to AuthenUtils.shared.getCodeVerifier(),
+                    "userId" to response.getuId().toString(),
+                    "isRegister" to response.isRegister,
+                    "type" to response.channel.name,
+                    "facebookAccessToken" to response.facebookAccessToken,
+                    "facebookAccessTokenExpiredDate" to response.facebookExpireTime,
+                    "socialId" to response.socialId,
+                )
+                val map = mapOf(
+                    "isSuccess" to true,
+                    "error" to error,
+                    "data" to data
+                )
+
+                result.success(map)
+            }
+
+            override fun onAuthenError(e: ErrorResponse) {
+                val error = mapOf<String, Any>(
+                    "errorCode" to e.errorCode,
+                    "errorMessage" to e.errorMsg,
+                )
+                val data = mapOf<String, Any>()
+                val map = mapOf(
+                    "isSuccess" to false,
+                    "error" to error,
+                    "data" to data
+                )
+                result.success(map)
+            }
+        }
+
+        zaloInstance.authenticateZaloWithAuthenType(
+            activity,
+            LoginVia.APP_OR_WEB,
+            AuthenUtils.shared.getCodeChallenge(),
+            if (extInfo != null) JSONObject(extInfo.toMap()) else null,
+            listener,
+        )
     }
 
     @Throws(Exception::class)
     private fun isAuthenticated(result: Result) {
-        zaloInstance.isAuthenticate { validated, _, _, _ -> result.success(validated) }
+        val refreshToken = context.getSharedPreferences("data", Context.MODE_PRIVATE)
+            .getString(UserDefaultsKeys.REFRESHTOKEN.name, null)
+        if (refreshToken != null)
+            ZaloSDK.Instance.isAuthenticate(refreshToken) { validated, _, _ ->
+                result.success(validated)
+            }
+        else
+            result.success(false)
     }
 
     @Throws(Exception::class)
     private fun logout(result: Result) {
+        AuthenUtils.shared.logout(context)
         zaloInstance.unauthenticate()
         result.success(null)
     }
@@ -150,7 +243,15 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     @Throws(Exception::class)
     private fun getUserProfile(result: Result) {
         val fields = arrayOf("id", "birthday", "gender", "picture", "name")
-        zaloInstance.getProfile(context, withZOGraphCallBack(result), fields)
+
+        AuthenUtils.shared.getAccessToken(context) {
+            if (it != null) zaloInstance.getProfile(
+                context,
+                it,
+                withZOGraphCallBack(result),
+                fields
+            ) else result.success(null)
+        }
     }
 
     @Throws(Exception::class)
@@ -159,13 +260,17 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val arguments = call.arguments as Map<*, *>
         val position = arguments["atOffset"] as Int
         val count = arguments["count"] as Int
-        zaloInstance.getFriendListUsedApp(
-            context,
-            position,
-            count,
-            withZOGraphCallBack(result),
-            fields
-        )
+
+        AuthenUtils.shared.getAccessToken(context) {
+            if (it != null) zaloInstance.getFriendListUsedApp(
+                context,
+                it,
+                position,
+                count,
+                withZOGraphCallBack(result),
+                fields
+            ) else result.success(null)
+        }
     }
 
     @Throws(Exception::class)
@@ -174,13 +279,17 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val arguments = call.arguments as Map<*, *>
         val position = arguments["atOffset"] as Int
         val count = arguments["count"] as Int
-        zaloInstance.getFriendListInvitable(
-            context,
-            position,
-            count,
-            withZOGraphCallBack(result),
-            fields
-        )
+
+        AuthenUtils.shared.getAccessToken(context) {
+            if (it != null) zaloInstance.getFriendListInvitable(
+                context,
+                it,
+                position,
+                count,
+                withZOGraphCallBack(result),
+                fields
+            ) else result.success(null)
+        }
     }
 
     @Throws(Exception::class)
@@ -189,7 +298,16 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val friendId = arguments["to"] as String?
         val msg = arguments["message"] as String?
         val link = arguments["link"] as String?
-        zaloOpenApi.sendMsgToFriend(context, friendId, msg, link, withZOGraphCallBack(result))
+
+        AuthenUtils.shared.getAccessToken(context) {
+            if (it != null) zaloOpenApi.sendMsgToFriend(
+                context,
+                it,
+                friendId,
+                msg, link,
+                withZOGraphCallBack(result),
+            ) else result.success(null)
+        }
     }
 
     @Throws(Exception::class)
@@ -197,7 +315,15 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val arguments = call.arguments as Map<*, *>
         val message = arguments["message"] as String?
         val link = arguments["link"] as String?
-        zaloOpenApi.postToWall(context, link, message, withZOGraphCallBack(result))
+        AuthenUtils.shared.getAccessToken(context) {
+            if (it != null) zaloOpenApi.postToWall(
+                context,
+                it,
+                link,
+                message,
+                withZOGraphCallBack(result),
+            ) else result.success(null)
+        }
     }
 
     @Throws(Exception::class)
@@ -207,7 +333,15 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val friendList = friendListX.map { e -> e as String }
         val friendId = friendList.toTypedArray()
         val message = arguments["message"] as String?
-        zaloInstance.inviteFriendUseApp(context, friendId, message, withZOGraphCallBack(result))
+        AuthenUtils.shared.getAccessToken(context) {
+            if (it != null) zaloOpenApi.inviteFriendUseApp(
+                context,
+                it,
+                friendId,
+                message,
+                withZOGraphCallBack(result),
+            ) else result.success(null)
+        }
     }
 
     @Throws(Exception::class)

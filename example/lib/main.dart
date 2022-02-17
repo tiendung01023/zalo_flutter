@@ -94,6 +94,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                 ),
                 CommonButton(
+                  text: 'loginWithoutAccessToken',
+                  onPressed: () async {
+                    final ZaloLogin data = await ZaloFlutter.loginWithoutAccessToken();
+                    return jsonEncode(data.toJson());
+                  },
+                ),
+                CommonButton(
                   text: 'getUserProfile',
                   onPressed: () async {
                     final ZaloProfile data = await ZaloFlutter.getUserProfile();
@@ -221,7 +228,7 @@ class _CommonButtonState extends State<CommonButton> {
       } catch (e) {
         data = text;
       }
-      return Text(data);
+      return SelectableText(data);
     }
 
     return Padding(

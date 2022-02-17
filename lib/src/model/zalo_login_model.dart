@@ -40,6 +40,7 @@ class ZaloLoginData {
       return;
     }
     oauthCode = map['oauthCode'] as String?;
+    codeVerifier = map['codeVerifier'] as String?;
     type = (map['type'] as String?)?.toEnum(ZOLoginType.values);
     userId = map['userId'] as String?;
     displayName = map['displayName'] as String?;
@@ -57,6 +58,7 @@ class ZaloLoginData {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> map = <String, dynamic>{};
     map['oauthCode'] = oauthCode;
+    map['codeVerifier'] = codeVerifier;
     map['type'] = enumToString(type);
     map['userId'] = userId;
     map['displayName'] = displayName;
@@ -74,6 +76,9 @@ class ZaloLoginData {
 
   /// Use for android and ios
   String? oauthCode;
+
+  /// Use for android and ios
+  String? codeVerifier;
 
   /// Use for android and ios
   ZOLoginType? type;

@@ -34,6 +34,9 @@ public class SwiftZaloFlutterPlugin: NSObject, FlutterPlugin {
         case "login":
             login(call, result)
             break
+        case "loginWithoutAccessToken":
+            loginWithoutAccessToken(call, result)
+            break
         case "getUserProfile":
             getUserProfile(call, result)
             break
@@ -125,6 +128,52 @@ public class SwiftZaloFlutterPlugin: NSObject, FlutterPlugin {
                         result(nil)
                     }
                 }
+            } else if let response = response, response.errorCode != -1001 { // not cancel
+                result(nil)
+            }
+        }
+    }
+    
+    func loginWithoutAccessToken(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
+        let arguments = call.arguments as! Dictionary<String, Any>
+        let extInfo = arguments["ext_info"] as? [AnyHashable : Any]
+        let rootViewController = UIApplication.shared.keyWindow?.rootViewController
+        AuthenUtils.shared.renewPKCECode()
+        ZaloSDK.sharedInstance().authenticateZalo(with: ZAZAloSDKAuthenTypeViaZaloAppAndWebView, parentController: rootViewController, codeChallenge: AuthenUtils.shared.getCodeChallenge(), extInfo: extInfo) { (response) in
+            if response?.isSucess == true {
+                let data : [String : Any?] = [
+                    "codeVerifier" : AuthenUtils.shared.getCodeVerifier(),
+                    "oauthCode": response?.oauthCode,
+                    "userId": response?.userId,
+                    "displayName": response?.displayName,
+                    "phoneNumber": response?.phoneNumber,
+                    "dob": response?.dob,
+                    "gender": response?.gender,
+                    
+                    "zcert": response?.zcert,
+                    "zprotect": response?.zprotect,
+                    "isRegister": response?.isRegister,
+                    
+                    
+                    "type": self.getTypeName(response!.type),
+                    "facebookAccessToken": response?.facebookAccessToken,
+                    "facebookAccessTokenExpiredDate": response?.facebookAccessTokenExpiredDate,
+                    "socialId": response?.socialId,
+                ]
+                
+                let error : [String : Any?] = [
+                    "errorCode": response?.errorCode,
+                    "errorMessage": response?.errorMessage,
+                ]
+                
+                let map : [String : Any?] = [
+                    "isSuccess": response?.isSucess,
+                    "error": error,
+                    "data": data
+                ]
+
+                result(map)
+                
             } else if let response = response, response.errorCode != -1001 { // not cancel
                 result(nil)
             }
