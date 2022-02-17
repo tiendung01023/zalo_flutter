@@ -33,31 +33,38 @@ minSdkVersion 18 // or bigger
 2. Open to `/android/app/src/main/AndroidManifest.xml` and edit
 
 ```xml
-<application
-        ...
-        android:name=".MyApplication">
-        <activity
-            ...
-            android:name=".MainActivity">
-            ...
-        </activity>
+<manifest
+	...
+	<!--for android sdk 30+-->
+	<queries
+        	<package android:name="com.zing.zalo" />
+	</queries>
+	<application
+		...
+		android:name=".MyApplication">
+		<activity
+		    ...
+		    android:name=".MainActivity">
+		    ...
+		</activity>
 
-        ...
+		...
 
-       <!-- ZaloFlutter -->
-       <meta-data
-           android:name="com.zing.zalo.zalosdk.appID"
-           android:value="@string/zalo_flutter_app_id" />
-       <activity
-           android:name="com.zing.zalo.zalosdk.oauth.BrowserLoginActivity">
-           <intent-filter>
-               <action android:name="android.intent.action.VIEW"/>
-               <category android:name="android.intent.category.DEFAULT"/>
-               <category android:name="android.intent.category.BROWSABLE"/>
-               <data android:scheme="@string/zalo_flutter_app_id_protocol"/>
-           </intent-filter>
-       </activity>
-    </application>
+	       <!-- ZaloFlutter -->
+	       <meta-data
+		   android:name="com.zing.zalo.zalosdk.appID"
+		   android:value="@string/zalo_flutter_app_id" />
+	       <activity
+		   android:name="com.zing.zalo.zalosdk.oauth.BrowserLoginActivity" 
+		   android:exported="true">
+		   <intent-filter>
+		       <action android:name="android.intent.action.VIEW"/>
+		       <category android:name="android.intent.category.DEFAULT"/>
+		       <category android:name="android.intent.category.BROWSABLE"/>
+		       <data android:scheme="@string/zalo_flutter_app_id_protocol"/>
+		   </intent-filter>
+	       </activity>
+	    </application>
 ```
 
 3. Create file `strings.xml`(if not exists) on folder `/android/app/src/main/res/values/strings.xml`. Replace with your ZaloAppID
@@ -104,15 +111,14 @@ Paste **HashKey** and **YourPackageName** to this page and press **Save**
 package [YourPackageName]
 
 import android.content.Intent
-import io.flutter.embedding.android.FlutterActivity
 import com.zing.zalo.zalosdk.oauth.ZaloSDK // <-- Add this line
+import io.flutter.embedding.android.FlutterActivity
 
-class MainActivity: FlutterActivity() {
-    override fun onActivityResult(requestCode:Int, resultCode:Int, data: Intent) {
+class MainActivity : FlutterActivity() {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         super.onActivityResult(requestCode, resultCode, data)
-        ZaloSDK.Instance.onActivityResult(this, requestCode, resultCode, data) // <-- Add this line
+        ZaloSDK.Instance.onActivityResult(this, requestCode, resultCode, data) // <-- Add this
     }
-}
 ```
 
 - Create file `MyApplication.kt` in same folder of `MainActivity.kt`. Replace with your **YourPackageName**
@@ -120,16 +126,17 @@ class MainActivity: FlutterActivity() {
 ```kotlin
 package [YourPackageName]
 
-import io.flutter.app.FlutterApplication
-import io.flutter.plugin.common.PluginRegistry
+import androidx.startup.AppInitializer
 import com.zing.zalo.zalosdk.oauth.ZaloSDKApplication
+import io.flutter.app.FlutterApplication
+import net.danlew.android.joda.JodaTimeInitializer
 
-class MyApplication : FlutterApplication(), PluginRegistry.PluginRegistrantCallback {
+class MyApplication : FlutterApplication() {
     override fun onCreate() {
         super.onCreate()
         ZaloSDKApplication.wrap(this)
+        AppInitializer.getInstance(this).initializeComponent(JodaTimeInitializer::class.java)
     }
-    override fun registerWith(registry: PluginRegistry) {}
 }
 ```
 
@@ -264,6 +271,12 @@ String? data = await ZaloFlutter.getHashKeyAndroid();
 
 ```dart
 ZaloLogin data = await ZaloFlutter.login();
+```
+
+- Authenticate without using OAuth token, double check in server (for SDK V4) (with app or webview)
+
+```dart
+ZaloLogin data = await ZaloFlutter.loginWithoutAccessToken();
 ```
 
 - Check if authenticated
