@@ -13,7 +13,6 @@ import ZaloSDK
     }
     
     override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        /// 0b. Receive callback from zalo
         return ZDKApplicationDelegate.sharedInstance().application(app, open: url, options: options)
     }
 }

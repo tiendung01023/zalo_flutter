@@ -28,8 +28,8 @@ public class SwiftZaloFlutterPlugin: NSObject, FlutterPlugin {
         case "logout":
             logout(call, result)
             break
-        case "isAuthenticated":
-            isAuthenticated(call, result)
+        case "validateRefreshToken":
+            validateRefreshToken(call, result)
             break
         case "login":
             login(call, result)
@@ -59,159 +59,145 @@ public class SwiftZaloFlutterPlugin: NSObject, FlutterPlugin {
     }
     
     func logout(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
-        AuthenUtils.shared.logout()
         ZaloSDK.sharedInstance().unauthenticate()
         result(nil)
     }
     
-    func isAuthenticated(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
+    func validateRefreshToken(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
         let arguments = call.arguments as! Dictionary<String, Any>
-        let extInfo = arguments["ext_info"] as? [AnyHashable : Any]
+        let refreshToken = arguments["refreshToken"] as! String
+        let extInfo = arguments["extInfo"] as? [AnyHashable : Any]
         
-        
-        let refreshToken = UserDefaults.standard.string(forKey: UserDefaultsKeys.refreshToken.rawValue)
-        if let refreshToken = refreshToken {
-            ZaloSDK.sharedInstance().validateRefreshToken(refreshToken, extInfo: extInfo) { (response) in
-                result(response?.isSucess == true)
-            }
-        } else {
-            result(false)
+        ZaloSDK.sharedInstance().validateRefreshToken(refreshToken, extInfo: extInfo) { (response) in
+            result(response?.isSucess == true)
         }
-        
     }
     
     func login(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
         let arguments = call.arguments as! Dictionary<String, Any>
-        let extInfo = arguments["ext_info"] as? [AnyHashable : Any]
-        let rootViewController = UIApplication.shared.keyWindow?.rootViewController
-        AuthenUtils.shared.renewPKCECode()
-        ZaloSDK.sharedInstance().authenticateZalo(with: ZAZAloSDKAuthenTypeViaZaloAppAndWebView, parentController: rootViewController, codeChallenge: AuthenUtils.shared.getCodeChallenge(), extInfo: extInfo) { (response) in
-            if response?.isSucess == true {
-                let oauthCode = response?.oauthCode
-                ZaloSDK.sharedInstance().getAccessToken(withOAuthCode: oauthCode, codeVerifier: AuthenUtils.shared.getCodeVerifier()) { (tokenResponse) in
-                    AuthenUtils.shared.saveTokenResponse(tokenResponse)
-                    if tokenResponse != nil {
-                        let data : [String : Any?] = [
-                            "oauthCode": response?.oauthCode,
-                            "userId": response?.userId,
-                            "displayName": response?.displayName,
-                            "phoneNumber": response?.phoneNumber,
-                            "dob": response?.dob,
-                            "gender": response?.gender,
-                            
-                            "zcert": response?.zcert,
-                            "zprotect": response?.zprotect,
-                            "isRegister": response?.isRegister,
-                            
-                            
-                            "type": self.getTypeName(response!.type),
-                            "facebookAccessToken": response?.facebookAccessToken,
-                            "facebookAccessTokenExpiredDate": response?.facebookAccessTokenExpiredDate,
-                            "socialId": response?.socialId,
-                        ]
-                        
-                        let error : [String : Any?] = [
-                            "errorCode": response?.errorCode,
-                            "errorMessage": response?.errorMessage,
-                        ]
-                        
-                        let map : [String : Any?] = [
-                            "isSuccess": response?.isSucess,
-                            "error": error,
-                            "data": data
-                        ]
-                        result(map)
-                    } else {
-                        result(nil)
-                    }
+        let extInfo = arguments["extInfo"] as? [AnyHashable : Any]
+        let refreshToken = arguments["refreshToken"] as? String
+
+        if refreshToken != nil {
+            ZaloSDK.sharedInstance().validateRefreshToken(refreshToken, extInfo: extInfo) { (response) in
+                if response?.isSucess == true {
+                    ZaloSDK.sharedInstance().getAccessToken(withRefreshToken: refreshToken, completionHandler: self.withZOTokenResponseObjectCallBack(result: result))
+                } else {
+                    self._loginWithoutRefreshToken(call, result)
                 }
-            } else if let response = response, response.errorCode != -1001 { // not cancel
+            }
+        } else {
+            self._loginWithoutRefreshToken(call, result)
+        }
+    }
+
+    func _loginWithoutRefreshToken(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
+        let arguments = call.arguments as! Dictionary<String, Any>
+        let codeVerifier = arguments["codeVerifier"] as! String
+        let codeChallenge = arguments["codeChallenge"] as! String
+        let extInfo = arguments["extInfo"] as? [AnyHashable : Any]
+        let rootViewController = UIApplication.shared.keyWindow?.rootViewController
+        
+        ZaloSDK.sharedInstance().authenticateZalo(with: ZAZAloSDKAuthenTypeViaZaloAppAndWebView, parentController: rootViewController, codeChallenge: codeChallenge, extInfo: extInfo) { (authenResponse) in
+            if let authenResponse = authenResponse {
+                let errorCode = authenResponse.errorCode
+                let errorMessage = authenResponse.errorMessage
+                let oauthCode = authenResponse.oauthCode
+                if (authenResponse.isSucess == true) {
+                    ZaloSDK.sharedInstance().getAccessToken(withOAuthCode: oauthCode, codeVerifier: codeVerifier, completionHandler: self.withZOTokenResponseObjectCallBack(result: result))
+                } else {
+                    let error : [String : Any?] = [
+                        "errorCode": errorCode,
+                        "errorMessage": errorMessage,
+                    ]
+                    let map : [String : Any?] = [
+                        "isSuccess": false,
+                        "error": error
+                    ]
+                    result(map)
+                }
+            } else {
+                let error : [String : Any?] = [
+                    "errorCode": 9999,
+                    "errorMessage": "Other error: authenticateZalo - cannot get response",
+                ]
+                
+                let map : [String : Any?] = [
+                    "isSuccess": false,
+                    "error": error
+                ]
+                result(map)
+            }
+        }
+    }
+
+    func getUserProfile(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
+        let arguments = call.arguments as! Dictionary<String, Any>
+        let accessToken = arguments["accessToken"] as! String
+        ZaloSDK.sharedInstance().getZaloUserProfile(withAccessToken: accessToken) { (response) in
+            if let response = response {
+                let error : [String : Any?] = [
+                    "errorCode": response.errorCode,
+                    "errorMessage": response.errorMessage,
+                ]
+                let data = response.data
+                let map : [String : Any?] = [
+                    "isSuccess": response.isSucess,
+                    "error": error,
+                    "data": data
+                ]
+                result(map)
+            } else {
                 result(nil)
             }
         }
     }
-    
-    func getUserProfile(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
-        AuthenUtils.shared.getAccessToken { (accessToken) in
-            if let accessToken = accessToken {
-                ZaloSDK.sharedInstance().getZaloUserProfile(withAccessToken: accessToken) { (response) in
-                    if let response = response {
-                        let error : [String : Any?] = [
-                            "errorCode": response.errorCode,
-                            "errorMessage": response.errorMessage,
-                        ]
-                        let data = response.data
-                        let map : [String : Any?] = [
-                            "isSuccess": response.isSucess,
-                            "error": error,
-                            "data": data
-                        ]
-                        result(map)
-                    } else {
-                        result(nil)
-                    }
-                }
-            }
-        }
-    }
+
     func getUserFriendList(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
         let arguments = call.arguments as! Dictionary<String, Any>
+        let accessToken = arguments["accessToken"] as! String
         let atOffset = arguments["atOffset"] as! UInt
         let count = arguments["count"] as! UInt
-        AuthenUtils.shared.getAccessToken {[self] (accessToken) in
-            if let accessToken = accessToken {
-                ZaloSDK.sharedInstance().getUserFriendList(atOffset: atOffset, count: count, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
-            }
-        }
-        
+
+        ZaloSDK.sharedInstance().getUserFriendList(atOffset: atOffset, count: count, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
     }
     
     func getUserInvitableFriendList(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
         let arguments = call.arguments as! Dictionary<String, Any>
+        let accessToken = arguments["accessToken"] as! String
         let atOffset = arguments["atOffset"] as! UInt
         let count = arguments["count"] as! UInt
-        AuthenUtils.shared.getAccessToken {[self] (accessToken) in
-            if let accessToken = accessToken {
-                ZaloSDK.sharedInstance().getUserInvitableFriendList(atOffset: atOffset, count: count, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
-            }
-        }
+
+        ZaloSDK.sharedInstance().getUserInvitableFriendList(atOffset: atOffset, count: count, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
     }
     
     func sendMessage(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
         let arguments = call.arguments as! Dictionary<String, Any>
+        let accessToken = arguments["accessToken"] as! String
         let to = arguments["to"] as? String ?? ""
         let message = arguments["message"] as? String ?? ""
         let link = arguments["link"] as? String ?? ""
-        AuthenUtils.shared.getAccessToken {[self] (accessToken) in
-            if let accessToken = accessToken {
-                ZaloSDK.sharedInstance().sendMessage(to: to, message: message, link: link, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
-            }
-        }
+
+        ZaloSDK.sharedInstance().sendMessage(to: to, message: message, link: link, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
     }
     
     func postFeed(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
         let arguments = call.arguments as! Dictionary<String, Any>
+        let accessToken = arguments["accessToken"] as! String
         let message = arguments["message"] as? String ?? ""
         let link = arguments["link"] as? String ?? ""
-        AuthenUtils.shared.getAccessToken {[self] (accessToken) in
-            if let accessToken = accessToken {
-                ZaloSDK.sharedInstance().postFeed(withMessage: message, link: link, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
-            }
-        }
+
+        ZaloSDK.sharedInstance().postFeed(withMessage: message, link: link, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
     }
     
     func sendAppRequest(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
         let arguments = call.arguments as! Dictionary<String, Any>
+        let accessToken = arguments["accessToken"] as! String
         let listTo = arguments["to"] as! Array<String>;
         let to = listTo.joined(separator: ",")
         let message = arguments["message"] as? String ?? ""
         
-        AuthenUtils.shared.getAccessToken {[self] (accessToken) in
-            if let accessToken = accessToken {
-                ZaloSDK.sharedInstance().sendAppRequest(to: to, message: message, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
-            }
-        }
-        
+        ZaloSDK.sharedInstance().sendAppRequest(to: to, message: message, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
     }
     
     
@@ -237,32 +223,50 @@ public class SwiftZaloFlutterPlugin: NSObject, FlutterPlugin {
         };
     }
     
-    func getTypeName(_ type: ZOLoginType) -> String? {
-        var name:String?
-        switch type {
-        case .apple:
-            name = "APPLE"
-            break
-        case .facebook:
-            name = "FACEBOOK"
-            break
-        case .googlePlus:
-            name = "GOOGLE"
-            break
-        case .guest:
-            name = "GUEST"
-            break
-        case .unknown:
-            name = "UNKNOWN"
-            break
-        case .zalo:
-            name = "ZALO"
-            break
-        case .zingMe:
-            name = "ZINGME"
-            break
-        default: break
-        }
-        return name
+    func withZOTokenResponseObjectCallBack(result: @escaping FlutterResult) -> (ZOTokenResponseObject?) -> Void {
+        return { (response) -> Void in
+            if let response = response {
+                let errorCode = response.errorCode // mã lỗi trả về, thành công khi >= 0
+                let errorMessage = response.errorMessage // câu thông báo lỗi
+                let accessToken = response.accessToken // dùng để gọi các Official Account API.
+                let refreshToken = response.refreshToken // lưu lại RefreshToken ở phía app để tạo lại AccessToken khi AccessToken hết hiệu lực.Hiệu lực: 3 tháng
+                let expriedTime = response.expriedTime // thời gian AccessToken hết hiệu lực.
+                if response.isSucess {
+                    let data : [String : Any?] = [
+                        "accessToken": accessToken,
+                        "refreshToken": refreshToken,
+                        "expriedTime": expriedTime,
+                    ]
+                    
+                    let map : [String : Any?] = [
+                        "isSuccess": response.isSucess,
+                        "data": data
+                    ]
+                    result(map)
+                } else {
+                    let error : [String : Any?] = [
+                        "errorCode": errorCode,
+                        "errorMessage": errorMessage,
+                    ]
+                    
+                    let map : [String : Any?] = [
+                        "isSuccess": false,
+                        "error": error
+                    ]
+                    result(map)
+                }
+            } else {
+                // Get AccessToken lỗi
+                let error : [String : Any?] = [
+                    "errorCode": 9998,
+                    "errorMessage": "Other error: getAccessToken - cannot get response",
+                ]
+                let map : [String : Any?] = [
+                    "isSuccess": false,
+                    "error": error
+                ]
+                result(map)
+            }
+        };
     }
 }

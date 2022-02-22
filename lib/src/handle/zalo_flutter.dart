@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 
-import '../model/model.dart';
-
-// ignore: avoid_classes_with_only_static_members
+/// * Đăng nhập và lấy thông tin của user
+/// * Login and get user profile
 class ZaloFlutter {
+  ZaloFlutter._();
   static const MethodChannel channel = MethodChannel('zalo_flutter');
 
   /// * Lấy HashKey của Android để đăng ký trong dashboard Zalo
@@ -20,25 +23,45 @@ class ZaloFlutter {
     return null;
   }
 
+  /// * Lấy CodeVerifier cho việc xác thực PCKE
+  /// * Get CodeVerifier for PCKE authencation
+  /// * More info: https://developers.zalo.me/docs/sdk/ios-sdk/dang-nhap/dang-nhap-post-6006
+  static String getCodeVerifier() {
+    const int length = 43;
+    final Random random = Random.secure();
+    final String verifier = base64UrlEncode(List<int>.generate(length, (_) => random.nextInt(256))).split('=')[0];
+    return verifier;
+  }
+
+  /// * Lấy CodeChallenge cho việc xác thực PCKE
+  /// * Get CodeChallenge for PCKE authencation
+  /// * More info: https://developers.zalo.me/docs/sdk/ios-sdk/dang-nhap/dang-nhap-post-6006
+  static String getCodeChallenge(String codeVerifier) {
+    final String rs = base64UrlEncode(sha256.convert(ascii.encode(codeVerifier)).bytes).split('=')[0];
+    return rs;
+  }
+
   /// * Đăng xuất - SDK xóa oauth code trong cache
   /// * Logout - SDK clear oauth code in cache
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/login/dang-xuat-post-429
-  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/login/dang-xuat-post-485
+  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/dang-nhap/dang-xuat-post-5728
   static Future<void> logout() async {
     await channel.invokeMethod<void>('logout');
   }
 
-  /// * Xác minh lại oauth code
-  /// * Check if authenticated
+  /// * Xác minh lại refresh token
+  /// * Check validate refresh token
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/login/xac-minh-lai-oauth-code-post-427
-  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/login/xac-minh-lai-oauth-code-post-483
-  static Future<bool> isLogin({
+  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/dang-nhap/xac-minh-lai-refreshtoken-post-5730
+  static Future<bool> validateRefreshToken({
+    required String refreshToken,
     List<Object> externalInfo = const <Object>[],
   }) async {
     final bool? rs = await channel.invokeMethod<bool?>(
-      'isAuthenticated',
+      'validateRefreshToken',
       <String, dynamic>{
-        'ext_info': externalInfo,
+        'refreshToken': refreshToken,
+        'extInfo': externalInfo,
       },
     );
     return rs == true;
@@ -47,71 +70,106 @@ class ZaloFlutter {
   /// * Đăng nhập
   /// * Authenticate (with app or webview)
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/login/dang-nhap-bang-zalo-post-250
-  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/login/dang-nhap-post-480
-  static Future<ZaloLogin> login({
+  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/dang-nhap/dang-nhap-post-6006
+  static Future<Map<dynamic, dynamic>?> login({
+    required String codeVerifier,
+    required String codeChallenge,
+    required String? refreshToken,
     Map<String, dynamic> externalInfo = const <String, dynamic>{},
   }) async {
     final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'login',
-      <String, dynamic>{'ext_info': externalInfo},
+      <String, dynamic>{
+        'codeVerifier': codeVerifier,
+        'codeChallenge': codeChallenge,
+        'extInfo': externalInfo,
+        'refreshToken': refreshToken,
+      },
     );
-    final ZaloLogin data = ZaloLogin.fromJson(rs);
-    return data;
+    return rs;
   }
 
   /// * Lấy thông tin người dùng
   /// * Get Zalo user profile
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/open-api/lay-thong-tin-nguoi-dung-post-435
-  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/lay-thong-tin-profile-post-490
-  static Future<ZaloProfile> getUserProfile() async {
-    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>('getUserProfile');
-    final ZaloProfile data = ZaloProfile.fromJson(rs);
-    return data;
+  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/lay-thong-tin-profile-post-5736
+  /// * More info Web: https://developers.zalo.me/docs/api/open-api/tai-lieu/thong-tin-nguoi-dung-post-28
+  static Future<Map<dynamic, dynamic>?> getUserProfile({
+    required String accessToken,
+  }) async {
+    // final http.Response response = await http.get(
+    //   Uri.parse('https://graph.zalo.me/v2.0/me?fields=id,name,picture,gender,birthday'),
+    //   headers: <String, String>{
+    //     'access_token': accessToken,
+    //   }
+    // );
+    // if (response.statusCode == 200) {
+    //   return response.body;
+    // } else {
+    //   return '';
+    // }
+    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
+      'getUserProfile',
+      <String, dynamic>{
+        'accessToken': accessToken,
+      },
+    );
+    return rs;
   }
+}
+
+/// * Sử dụng cho OA (đang nghiên cứu)
+/// * Use for OA (studying)
+class ZaloOAFlutter {
+  ZaloOAFlutter._();
+  static const MethodChannel channel = MethodChannel('zalo_flutter');
 
   /// * Lấy danh sách bạn bè (đã sử dụng ứng dụng)
   /// * Get Zalo user friend list (used app)
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/open-api/lay-danh-sach-ban-be-post-437
-  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/lay-danh-sach-ban-be-zalo-post-492
-  static Future<ZaloUserFriend> getUserFriendList({
+  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/lay-danh-sach-ban-be-zalo-post-5813
+  static Future<Map<dynamic, dynamic>?> getUserFriendList({
+    required String accessToken,
     required int atOffset,
     required int count,
   }) async {
     final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'getUserFriendList',
       <String, dynamic>{
+        'accessToken': accessToken,
         'atOffset': atOffset,
         'count': count,
       },
     );
-    final ZaloUserFriend data = ZaloUserFriend.fromJson(rs);
-    return data;
+    return rs;
   }
 
   /// * Lấy danh sách bạn bè (chưa sử dụng ứng dụng)
   /// * Get Zalo user friend list (not used app)
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/open-api/lay-danh-sach-ban-be-post-437
-  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/lay-danh-sach-ban-be-zalo-post-492
-  static Future<ZaloUserFriend> getUserInvitableFriendList({
+  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/lay-danh-sach-ban-be-zalo-post-5813
+  static Future<Map<dynamic, dynamic>?> getUserInvitableFriendList({
+    required String accessToken,
     required int atOffset,
     required int count,
   }) async {
     final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'getUserInvitableFriendList',
       <String, dynamic>{
+        'accessToken': accessToken,
         'atOffset': atOffset,
         'count': count,
       },
     );
-    final ZaloUserFriend data = ZaloUserFriend.fromJson(rs);
-    return data;
+    return rs;
   }
 
   /// * Gửi tin nhắn tới bạn bè
   /// * Send message to a friend
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/open-api/gui-tin-nhan-toi-ban-be-post-1205
-  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/gui-tin-nhan-cho-ban-be-post-1266
-  static Future<ZaloSendMessage> sendMessage({
+  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/gui-tin-nhan-cho-ban-be-post-5825
+  static Future<Map<dynamic, dynamic>?> sendMessage({
+    required String accessToken,
     required String to,
     required String message,
     String? link,
@@ -119,50 +177,52 @@ class ZaloFlutter {
     final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'sendMessage',
       <String, dynamic>{
+        'accessToken': accessToken,
         'to': to,
         'message': message,
         'link': link,
       },
     );
-    final ZaloSendMessage data = ZaloSendMessage.fromJson(rs);
-    return data;
+    return rs;
   }
 
   /// * Đăng bài viết
   /// * Post feed
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/open-api/dang-bai-viet-post-1212
   /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/dang-bai-viet-post-1248
-  static Future<ZaloPostFeed> postFeed({
+  static Future<Map<dynamic, dynamic>?> postFeed({
+    required String accessToken,
     required String message,
     String? link,
   }) async {
     final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'postFeed',
       <String, dynamic>{
+        'accessToken': accessToken,
         'message': message,
         'link': link,
       },
     );
-    final ZaloPostFeed data = ZaloPostFeed.fromJson(rs);
-    return data;
+    return rs;
   }
 
   /// * Mời sử dụng ứng dụng
   /// * Send app request
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/open-api/moi-su-dung-ung-dung-post-1218
   /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/open-api/moi-su-dung-ung-dung-post-1251
-  static Future<ZaloSendAppRequest> sendAppRequest({
+  static Future<Map<dynamic, dynamic>?> sendAppRequest({
+    required String accessToken,
     required List<String> to,
     required String message,
   }) async {
     final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'sendAppRequest',
       <String, dynamic>{
+        'accessToken': accessToken,
         'to': to,
         'message': message,
       },
     );
-    final ZaloSendAppRequest data = ZaloSendAppRequest.fromJson(rs);
-    return data;
+    return rs;
   }
 }
