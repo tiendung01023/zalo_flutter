@@ -118,7 +118,7 @@ public class SwiftZaloFlutterPlugin: NSObject, FlutterPlugin {
                 }
             } else {
                 let error : [String : Any?] = [
-                    "errorCode": 9999,
+                    "errorCode": -9999,
                     "errorMessage": "Other error: authenticateZalo - cannot get response",
                 ]
                 
@@ -258,7 +258,7 @@ public class SwiftZaloFlutterPlugin: NSObject, FlutterPlugin {
             } else {
                 // Get AccessToken lỗi
                 let error : [String : Any?] = [
-                    "errorCode": 9998,
+                    "errorCode": -9998,
                     "errorMessage": "Other error: getAccessToken - cannot get response",
                 ]
                 let map : [String : Any?] = [

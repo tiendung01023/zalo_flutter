@@ -4,3 +4,7 @@ Init project
 Fix lint and update description
 ## 0.0.3
 Fix example
+## 0.0.4
+Update ZaloSDK v4.0
+Support timeout
+Remove all OA function 

@@ -35,9 +35,6 @@ class _MyHomePageState extends State<MyHomePage> {
   String zaloMessage = 'Hello';
   String zaloLink = 'www.google.com';
 
-  String _codeVerifier = '';
-  String get _codeChallenge => ZaloFlutter.getCodeChallenge(_codeVerifier);
-
   String? _accessToken;
   String? _refreshToken;
 
@@ -77,16 +74,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 CommonButton(
                   text: 'login',
                   onPressed: () async {
-                    _codeVerifier = ZaloFlutter.getCodeVerifier();
                     final Map<dynamic, dynamic>? data = await ZaloFlutter.login(
-                      codeVerifier: _codeVerifier,
-                      codeChallenge: _codeChallenge,
                       refreshToken: _refreshToken,
                     );
                     try {
                       print("login: $data");
-                      _accessToken = data?["data"]["accessToken"] as String?;
-                      _refreshToken = data?["data"]["refreshToken"] as String?;
+                      if (data?['isSuccess'] == true) {
+                        _accessToken = data?["data"]["accessToken"] as String?;
+                        _refreshToken = data?["data"]["refreshToken"] as String?;
+                      }
                     } catch (e) {
                       print("login: $e");
                     }
@@ -228,7 +224,9 @@ class _CommonButtonState extends State<CommonButton> {
         final DateTime time = DateTime.now();
         print('[$time][commonButton] ${widget.text}');
         final dynamic data = await widget.onPressed();
-        if (data is String) {
+        if (data == null) {
+          result = 'null';
+        } else if (data is String) {
           result = data;
         } else if (data is Map) {
           result = jsonEncode(data);

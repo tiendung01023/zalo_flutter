@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.util.Base64
 import android.util.Log
 import androidx.annotation.NonNull
-import com.zing.zalo.zalosdk.oauth.*
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -22,6 +21,8 @@ import java.lang.Exception
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
+import com.zing.zalo.zalosdk.oauth.*
+import com.zing.zalo.zalosdk.oauth.model.ErrorResponse
 
 /** ZaloFlutterPlugin */
 class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
@@ -63,9 +64,9 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             when (call.method) {
                 "getHashKey" -> getHashKey(result)
                 "logout" -> logout(result)
-                "isAuthenticated" -> isAuthenticated(result)
-                "login" -> login(result)
-                "getUserProfile" -> getUserProfile(result)
+                "validateRefreshToken" -> validateRefreshToken(call, result)
+                "login" -> login(call, result)
+                "getUserProfile" -> getUserProfile(call, result)
                 "getUserFriendList" -> getUserFriendList(call, result)
                 "getUserInvitableFriendList" -> getUserInvitableFriendList(call, result)
                 "sendMessage" -> sendMessage(call, result)
@@ -100,31 +101,37 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     @Throws(Exception::class)
-    private fun login(result: Result) {
+    private fun login(call: MethodCall, result: Result) {
+        val arguments = call.arguments as Map<*, *>
+        val refreshToken = arguments["refreshToken"] as String?
+
+        if (refreshToken != null) {
+            zaloInstance.getAccessTokenByRefreshToken(activity, refreshToken, withZOGraphCallBack(result))
+        } else {
+            loginWithoutRefreshToken(call, result)
+        }
+    }
+
+    @Throws(Exception::class)
+    private fun loginWithoutRefreshToken(call: MethodCall, result: Result) {
+        val arguments = call.arguments as Map<*, *>
+        val extInfo = JSONObject(arguments["extInfo"] as Map<*, *>)
+
+        val codeVerifier = arguments["codeVerifier"] as String
+        val codeChallenge = arguments["codeChallenge"] as String
+
         val listener: OAuthCompleteListener = object : OAuthCompleteListener() {
             override fun onGetOAuthComplete(response: OauthResponse) {
-                val error: MutableMap<String, Any?> = HashMap()
-                error["errorCode"] = response.errorCode
-                error["errorMessage"] = response.errorMessage
-                val data: MutableMap<String, Any?> = HashMap()
-                data["oauthCode"] = response.oauthCode
-                data["userId"] = response.getuId().toString()
-                data["isRegister"] = response.isRegister
-                data["type"] = response.channel.name
-                data["facebookAccessToken"] = response.facebookAccessToken
-                data["facebookAccessTokenExpiredDate"] = response.facebookExpireTime
-                data["socialId"] = response.socialId
-                val map: MutableMap<String, Any?> = HashMap()
-                map["isSuccess"] = true
-                map["error"] = error
-                map["data"] = data
-                result.success(map)
+                val oauthCode = response.oauthCode
+                zaloInstance.getAccessTokenByOAuthCode(activity, oauthCode, codeVerifier, withZOGraphCallBack(result))
             }
 
-            override fun onAuthenError(errorCode: Int, message: String) {
+            override fun onAuthenError(errorResponse: ErrorResponse?) {
                 val error: MutableMap<String, Any?> = HashMap()
-                error["errorCode"] = errorCode
-                error["errorMessage"] = message
+                error["errorCode"] = errorResponse?.errorCode
+                error["errorMessage"] = errorResponse?.errorMsg
+                error["errorDescription"] = errorResponse?.errorDescription
+                error["errorReason"] = errorResponse?.errorReason
                 val data: Map<String, Any> = HashMap()
                 val map: MutableMap<String, Any?> = HashMap()
                 map["isSuccess"] = false
@@ -133,12 +140,17 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.success(map)
             }
         }
-        zaloInstance.authenticate(activity, LoginVia.APP_OR_WEB, listener)
+        zaloInstance.authenticateZaloWithAuthenType(activity, LoginVia.APP_OR_WEB, codeChallenge, extInfo, listener)
     }
 
     @Throws(Exception::class)
-    private fun isAuthenticated(result: Result) {
-        zaloInstance.isAuthenticate { validated, _, _, _ -> result.success(validated) }
+    private fun validateRefreshToken(call: MethodCall, result: Result) {
+        val arguments = call.arguments as Map<*, *>
+        val refreshToken = arguments["refreshToken"] as String
+
+        zaloInstance.isAuthenticate(refreshToken) { validated, _, _ ->
+            result.success(validated)
+        }
     }
 
     @Throws(Exception::class)
@@ -148,19 +160,24 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     @Throws(Exception::class)
-    private fun getUserProfile(result: Result) {
+    private fun getUserProfile(call: MethodCall, result: Result) {
+        val arguments = call.arguments as Map<*, *>
+        val accessToken = arguments["accessToken"] as String
+
         val fields = arrayOf("id", "birthday", "gender", "picture", "name")
-        zaloInstance.getProfile(context, withZOGraphCallBack(result), fields)
+        zaloInstance.getProfile(context, accessToken, withZOGraphCallBack(result), fields)
     }
 
     @Throws(Exception::class)
     private fun getUserFriendList(call: MethodCall, result: Result) {
         val fields = arrayOf("id", "name", "gender", "picture")
         val arguments = call.arguments as Map<*, *>
+        val accessToken = arguments["accessToken"] as String
         val position = arguments["atOffset"] as Int
         val count = arguments["count"] as Int
         zaloInstance.getFriendListUsedApp(
             context,
+            accessToken,
             position,
             count,
             withZOGraphCallBack(result),
@@ -172,10 +189,12 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private fun getUserInvitableFriendList(call: MethodCall, result: Result) {
         val fields = arrayOf("id", "name", "gender", "picture")
         val arguments = call.arguments as Map<*, *>
+        val accessToken = arguments["accessToken"] as String
         val position = arguments["atOffset"] as Int
         val count = arguments["count"] as Int
         zaloInstance.getFriendListInvitable(
             context,
+            accessToken,
             position,
             count,
             withZOGraphCallBack(result),
@@ -186,28 +205,31 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     @Throws(Exception::class)
     private fun sendMessage(call: MethodCall, result: Result) {
         val arguments = call.arguments as Map<*, *>
+        val accessToken = arguments["accessToken"] as String
         val friendId = arguments["to"] as String?
         val msg = arguments["message"] as String?
         val link = arguments["link"] as String?
-        zaloOpenApi.sendMsgToFriend(context, friendId, msg, link, withZOGraphCallBack(result))
+        zaloOpenApi.sendMsgToFriend(context, accessToken, friendId, msg, link, withZOGraphCallBack(result))
     }
 
     @Throws(Exception::class)
     private fun postFeed(call: MethodCall, result: Result) {
         val arguments = call.arguments as Map<*, *>
+        val accessToken = arguments["accessToken"] as String
         val message = arguments["message"] as String?
         val link = arguments["link"] as String?
-        zaloOpenApi.postToWall(context, link, message, withZOGraphCallBack(result))
+        zaloOpenApi.postToWall(context, accessToken, link, message, withZOGraphCallBack(result))
     }
 
     @Throws(Exception::class)
     private fun sendAppRequest(call: MethodCall, result: Result) {
         val arguments = call.arguments as Map<*, *>
+        val accessToken = arguments["accessToken"] as String
         val friendListX = arguments["to"] as List<*>
         val friendList = friendListX.map { e -> e as String }
         val friendId = friendList.toTypedArray()
         val message = arguments["message"] as String?
-        zaloInstance.inviteFriendUseApp(context, friendId, message, withZOGraphCallBack(result))
+        zaloInstance.inviteFriendUseApp(context, accessToken, friendId, message, withZOGraphCallBack(result))
     }
 
     @Throws(Exception::class)
@@ -215,28 +237,43 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         return ZaloOpenAPICallback { response: JSONObject? ->
             try {
                 if (response == null) {
-                    result.success(null)
+                    val error: MutableMap<String, Any?> = HashMap()
+                    error["errorCode"] = -9999
+                    error["errorMessage"] = "Other error: cannot get response"
+                    val map: MutableMap<String, Any?> = HashMap()
+                    map["isSuccess"] = false
+                    map["error"] = error
+                    result.success(map)
                 } else {
                     val data: Map<String, Any?> = AppHelper.jsonToMap(response)
-                    val error: MutableMap<String, Any?> = HashMap()
                     val errorCode = data["error"] as Int
-                    error["errorCode"] = errorCode
-                    error["errorMessage"] = data["message"]
-                    val map: MutableMap<String, Any?> = HashMap()
-                    map["isSuccess"] = errorCode == 0
-                    map["error"] = error
-                    map["data"] = data
-                    result.success(map)
+                    val isSuccess = errorCode == 0
+                    if (isSuccess) {
+                        val map: MutableMap<String, Any?> = HashMap()
+                        map["isSuccess"] = true
+                        val newData = data.filterKeys { key -> key != "error" && key != "message" && key != "extCode" }
+                        map["data"] = newData
+                        result.success(map)
+                    } else {
+                        val map: MutableMap<String, Any?> = HashMap()
+
+                        val error: MutableMap<String, Any?> = HashMap()
+                        error["errorCode"] = errorCode
+                        error["errorMessage"] = data["message"]
+                        error["errorExtCode"] = data["extCode"]
+
+                        map["isSuccess"] = errorCode == 0
+                        map["error"] = error
+                        result.success(map)
+                    }
                 }
-            } catch (e: JSONException) {
+            } catch (e: Exception) {
                 val error: MutableMap<String, Any?> = HashMap()
-                error["errorCode"] = -1
+                error["errorCode"] = -9997
                 error["errorMessage"] = e.message
-                val data: Map<String, Any> = HashMap()
                 val map: MutableMap<String, Any?> = HashMap()
                 map["isSuccess"] = false
                 map["error"] = error
-                map["data"] = data
                 result.success(map)
             }
         }

@@ -37,7 +37,7 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    api "com.zing.zalo.zalosdk:core:2.5.0819"
-    api "com.zing.zalo.zalosdk:auth:2.5.0819"
-    api "com.zing.zalo.zalosdk:openapi:2.5.0819"
+    api "me.zalo:sdk-core:4.0.1020"
+    api "me.zalo:sdk-auth:4.0.1020"
+    api "me.zalo:sdk-openapi:4.0.1020"
 }
