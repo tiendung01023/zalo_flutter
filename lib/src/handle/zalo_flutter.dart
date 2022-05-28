@@ -79,7 +79,7 @@ class ZaloFlutter {
   /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/dang-nhap/dang-nhap-post-6027
   /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/dang-nhap/dang-nhap-post-6006
   static Future<Map<dynamic, dynamic>?> login({
-    required String? refreshToken,
+    String? refreshToken,
     Map<String, dynamic> externalInfo = const <String, dynamic>{},
   }) async {
     final String codeVerifier = ZaloFlutter._getCodeVerifier();
@@ -93,18 +93,6 @@ class ZaloFlutter {
         'refreshToken': refreshToken,
       },
     ).setTimeout(_timeout);
-    try {
-      if (rs != null && rs['data'] != null && rs['data'] is Map<dynamic, dynamic>) {
-        final Map<dynamic, dynamic>? data = rs['data'] as Map<dynamic, dynamic>?;
-        data?['accessToken'] = data['access_token'];
-        data?['refreshToken'] = data['refresh_token'];
-        data?['expriedTime'] = data['expires_in'];
-        data?.remove('access_token');
-        data?.remove('refresh_token');
-        data?.remove('expires_in');
-      }
-    // ignore: empty_catches
-    } catch (e) {}
     return rs;
   }
 
@@ -117,17 +105,6 @@ class ZaloFlutter {
     required String accessToken,
   }) async {
     final String newAccessToken = accessToken == '' ? 'x' : accessToken;
-    // final http.Response response = await http.get(
-    //   Uri.parse('https://graph.zalo.me/v2.0/me?fields=id,name,picture,gender,birthday'),
-    //   headers: <String, String>{
-    //     'access_token': accessToken,
-    //   }
-    // );
-    // if (response.statusCode == 200) {
-    //   return response.body;
-    // } else {
-    //   return '';
-    // }
     final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'getUserProfile',
       <String, dynamic>{

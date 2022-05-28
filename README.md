@@ -317,7 +317,3 @@ If you have any questions, feel free to message me right away
 **Gmail:** tiendung01023@gmail.com
 
 **Github:** https://github.com/tiendung01023
-
-**Linkedin:** https://www.linkedin.com/in/tiendung01023
-
-**Facebook:** https://www.facebook.com/tiendung01023

@@ -7,4 +7,7 @@ Fix example
 ## 0.0.4
 Update ZaloSDK v4.0
 Support timeout
-Remove all OA function 
+Remove all OA function
+
+## 0.0.5
+Hot-fix login iOS
