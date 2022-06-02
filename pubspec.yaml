@@ -1,6 +1,6 @@
 name: zalo_flutter
 description: The easiest way to add Zalo login to your flutter app, get user information, profile picture and more.
-version: 0.0.3
+version: 0.0.5
 homepage: https://github.com/tiendung01023/zalo_flutter
 
 environment:
@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  crypto: ^3.0.1
 
 dev_dependencies:
   flutter_test:

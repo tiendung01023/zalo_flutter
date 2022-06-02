@@ -34,31 +34,45 @@ minSdkVersion 18 // or bigger
 
 ```xml
 <application
+    ...
+    android:name=".MyApplication">
+    <activity
         ...
-        android:name=".MyApplication">
-        <activity
-            ...
-            android:name=".MainActivity">
-            ...
-        </activity>
-
+        android:name=".MainActivity">
         ...
+    </activity>
 
-       <!-- ZaloFlutter -->
-       <meta-data
-           android:name="com.zing.zalo.zalosdk.appID"
-           android:value="@string/zalo_flutter_app_id" />
-       <activity
-           android:name="com.zing.zalo.zalosdk.oauth.BrowserLoginActivity">
-           <intent-filter>
-               <action android:name="android.intent.action.VIEW"/>
-               <category android:name="android.intent.category.DEFAULT"/>
-               <category android:name="android.intent.category.BROWSABLE"/>
-               <data android:scheme="@string/zalo_flutter_app_id_protocol"/>
-           </intent-filter>
-       </activity>
-    </application>
+    ...
+
+    <!-- ZaloFlutter start -->
+    <meta-data
+        android:name="com.zing.zalo.zalosdk.appID"
+        android:value="@string/zalo_flutter_app_id" />
+    <activity
+        android:name="com.zing.zalo.zalosdk.oauth.BrowserLoginActivity"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW"/>
+            <category android:name="android.intent.category.DEFAULT"/>
+            <category android:name="android.intent.category.BROWSABLE"/>
+            <data android:scheme="@string/zalo_flutter_app_id_protocol"/>
+        </intent-filter>
+    </activity>
+    <!-- ZaloFlutter end -->
+</application>
+<queries>
+    <package android:name="com.zing.zalo" />
+</queries>
 ```
+
+**Note:** 
+- With app target Android 11 (API >=30), add this info for open Zalo app
+```xml
+<queries>
+    <package android:name="com.zing.zalo">
+</queries>
+```
+- With app target Android 12 (API >=31), add `android:exported="true"` for get callback when login with Browser
 
 3. Create file `strings.xml`(if not exists) on folder `/android/app/src/main/res/values/strings.xml`. Replace with your ZaloAppID
 
@@ -94,6 +108,13 @@ Then, you see Debug console and copy **HashKey**
 Paste **HashKey** and **YourPackageName** to this page and press **Save**
 
 ![](readme_assets/6.png)
+
+6. Add proguard for zaloSDK
+```
+-keep class com.zing.zalo.**{ *; }
+-keep enum com.zing.zalo.**{ *; }
+-keep interface com.zing.zalo.**{ *; }
+```
 
 #### Continue with Kotlin
 ![](readme_assets/3.png)
@@ -203,15 +224,42 @@ public class MyApplication extends Application {
 	</array>
 	<key>ZaloAppID</key>
 	<string>[ZaloAppID]</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>zalosdk</string>
+		<string>zaloshareext</string>
+	</array>
       <!-- ZaloFlutter end-->
 </dict>
 </plist>
 ```
 
-2. Open `ios/Runner.xcodeproj/project.pbxproj`, search `PRODUCT_BUNDLE_IDENTIFIER` and copy your **BundleID**
+2. Open `ios/Runner/AppDelegate.swift` file, add the following Zalo function code
+```swift
+import UIKit
+import Flutter
+import ZaloSDK
+
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate {
+    override func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        GeneratedPluginRegistrant.register(with: self)
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+    // Zalo function go here
+    override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        return ZDKApplicationDelegate.sharedInstance().application(app, open: url, options: options)
+    }
+}
+```
+
+3. Open `ios/Runner.xcodeproj/project.pbxproj`, search `PRODUCT_BUNDLE_IDENTIFIER` and copy your **BundleID**
 
 
-3. Open Zalo Dashboard => Login => IOS (https://developers.zalo.me/app/[ZaloAppID]/login)
+4. Open Zalo Dashboard => Login => IOS (https://developers.zalo.me/app/[ZaloAppID]/login)
 Paste **BundleID** to this page and press **Save**
 ![](readme_assets/7.png)
 
@@ -235,13 +283,9 @@ String? data = await ZaloFlutter.getHashKeyAndroid();
 - Authenticate (with app or webview)
 
 ```dart
-ZaloLogin data = await ZaloFlutter.login();
-```
-
-- Check if authenticated
-
-```dart
-bool data = await ZaloFlutter.isLogin();
+ZaloLogin data = await ZaloFlutter.login(
+    refreshToken: refreshToken,
+);
 ```
 
 - Log out - SDK clear oauth code in cache
@@ -250,39 +294,19 @@ bool data = await ZaloFlutter.isLogin();
 await ZaloFlutter.logout();
 ```
 
+- Validate refresh token
+
+```dart
+bool data = await ZaloFlutter.validateRefreshToken(
+    refreshToken: refreshToken,
+);
+```
+
 - Get Zalo user profile
 ```dart
-ZaloProfile data = await ZaloFlutter.getUserProfile();
-```
-
-- Get Zalo user friend list (used app)
-
-```dart
-ZaloUserFriend data = await ZaloFlutter.getUserFriendList();
-```
-
-- Get Zalo user friend list (not used app)
-
-```dart
-ZaloUserFriend data = await ZaloFlutter.getUserInvitableFriendList();
-```
-
-- Send message to a friend
-
-```dart
-ZaloSendMessage data = await ZaloFlutter.sendMessage(to: "zaloId",message: "zaloMessage",link: "zaloMessageLink");
-```
-
-- Post feed
-
-```dart
-ZaloPostFeed data = await ZaloFlutter.postFeed(message: "zaloContentPost",link: "zaloLinkPost");
-```
-
-- Send app request
-
-```dart
-ZaloSendAppRequest data = await ZaloFlutter.sendAppRequest(to: ["zaloId1, zaloId2"], message: "zaloMessage",);
+ZaloProfile data = await ZaloFlutter.getUserProfile(
+    accessToken: accessToken,
+);
 ```
 
 ## Author
@@ -293,7 +317,3 @@ If you have any questions, feel free to message me right away
 **Gmail:** tiendung01023@gmail.com
 
 **Github:** https://github.com/tiendung01023
-
-**Linkedin:** https://www.linkedin.com/in/tiendung01023
-
-**Facebook:** https://www.facebook.com/tiendung01023

@@ -38,12 +38,13 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-       <!-- ZaloFlutter -->
+       <!-- ZaloFlutter start -->
        <meta-data
            android:name="com.zing.zalo.zalosdk.appID"
            android:value="@string/zalo_flutter_app_id" />
        <activity
-           android:name="com.zing.zalo.zalosdk.oauth.BrowserLoginActivity">
+           android:name="com.zing.zalo.zalosdk.oauth.BrowserLoginActivity"
+           android:exported="true">
            <intent-filter>
                <action android:name="android.intent.action.VIEW"/>
                <category android:name="android.intent.category.DEFAULT"/>
@@ -51,5 +52,9 @@
                <data android:scheme="@string/zalo_flutter_app_id_protocol"/>
            </intent-filter>
        </activity>
+       <!-- ZaloFlutter end -->
     </application>
+    <queries>
+        <package android:name="com.zing.zalo" />
+    </queries>
 </manifest>

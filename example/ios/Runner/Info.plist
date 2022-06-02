@@ -41,7 +41,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<!-- ZaloFlutter -->
+	<!-- ZaloFlutter start -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -57,5 +57,11 @@
 	</array>
 	<key>ZaloAppID</key>
 	<string>49043287940421924</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>zalosdk</string>
+		<string>zaloshareext</string>
+	</array>
+	<!-- ZaloFlutter end -->
 </dict>
 </plist>
