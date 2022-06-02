@@ -72,6 +72,7 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 "sendMessage" -> sendMessage(call, result)
                 "postFeed" -> postFeed(call, result)
                 "sendAppRequest" -> sendAppRequest(call, result)
+                "shareMessage" -> shareMessage(call, result)
                 else -> {
                     result.notImplemented()
                 }
@@ -230,6 +231,20 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val friendId = friendList.toTypedArray()
         val message = arguments["message"] as String?
         zaloInstance.inviteFriendUseApp(context, accessToken, friendId, message, withZOGraphCallBack(result))
+    }
+
+    @Throws(Exception::class)
+    private fun shareMessage(call: MethodCall, result: Result) {
+        val arguments = call.arguments as Map<*, *>
+        val link = arguments["link"] as String
+        val message = arguments["message"] as String
+        val appName = arguments["appName"] as String
+        val feed = FeedData()
+        feed.msg = message
+        feed.link = link
+        feed.appName = appName
+        zaloOpenApi.shareMessage(activity, feed, null)
+        result.success(true)
     }
 
     @Throws(Exception::class)
