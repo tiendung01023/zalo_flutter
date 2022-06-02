@@ -120,6 +120,17 @@ class _MyHomePageState extends State<MyHomePage> {
                     return data;
                   },
                 ),
+                CommonButton(
+                  text: 'shareMessage',
+                  onPressed: () async {
+                    final bool result = await ZaloFlutter.shareMessage(
+                      link: 'https://huuksocialproduction.page.link/nHKZ',
+                      message: 'assadda',
+                      appName: 'Huuk Social',
+                    );
+                    return result;
+                  },
+                ),
                 // CommonButton(
                 //   text: 'OA - getUserFriendList',
                 //   onPressed: () async {

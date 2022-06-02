@@ -52,6 +52,9 @@ public class SwiftZaloFlutterPlugin: NSObject, FlutterPlugin {
         case "sendAppRequest":
             sendAppRequest(call, result)
             break
+        case "shareMessage":
+            shareMessage(call, result)
+            break
         default:
             result("Not implement")
             break
@@ -200,6 +203,22 @@ public class SwiftZaloFlutterPlugin: NSObject, FlutterPlugin {
         ZaloSDK.sharedInstance().sendAppRequest(to: to, message: message, accessToken: accessToken, callback: withZOGraphCallBack(result: result))
     }
     
+    func shareMessage(_ call: FlutterMethodCall,_ result: @escaping FlutterResult) {
+        let viewController: UIViewController =
+                    (UIApplication.shared.delegate?.window??.rootViewController)!;
+        let arguments = call.arguments as! Dictionary<String, Any>
+        let link = arguments["link"] as! String
+        let message = arguments["message"] as! String
+        let appName = arguments["appName"] as! String
+        let feed = ZOFeed(
+                link: link,
+                appName: appName,
+                message: message,
+                others: nil
+        )
+        ZaloSDK.sharedInstance().sendMessage(feed, in: viewController, callback: nil)
+        result(true)
+    }
     
     /// Common
     

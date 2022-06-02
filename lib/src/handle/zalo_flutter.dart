@@ -113,6 +113,26 @@ class ZaloFlutter {
     ).setTimeout(_timeout);
     return rs;
   }
+
+  /// * Chia sẻ tin nhắn - SDK mở zalo app với text
+  /// * Share Message - SDK open zalo app with some text
+  /// * More info Android: https://developers.zalo.me/docs/sdk/android-sdk/tuong-tac-voi-app-zalo/dang-bai-viet-post-6047
+  /// * More info Ios: https://developers.zalo.me/docs/sdk/ios-sdk/tuong-tac-voi-app-zalo/dang-bai-viet-post-5843
+  static Future<bool> shareMessage({
+    required String link,
+    required String appName,
+    required String message,
+  }) async {
+    final bool? result = await channel.invokeMethod<bool?>(
+      'shareMessage',
+      <String, dynamic>{
+        'link': link,
+        'appName': appName,
+        'message': message,
+      },
+    ).setTimeout(_timeout);
+    return result == true;
+  }
 }
 
 // /// * Sử dụng cho OA (đang nghiên cứu)
