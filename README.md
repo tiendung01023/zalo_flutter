@@ -27,7 +27,7 @@ To use this plugin, follow the [plugin installation instructions](https://pub.de
 1. Open `android/app/build.gradle` and edit
 
 ```gradle
-minSdkVersion 18 // or bigger
+minSdkVersion 21 // or bigger
 ```
 
 2. Open to `/android/app/src/main/AndroidManifest.xml` and edit
@@ -60,19 +60,14 @@ minSdkVersion 18 // or bigger
     </activity>
     <!-- ZaloFlutter end -->
 </application>
+...
+
+<!-- ZaloFlutter start -->
 <queries>
     <package android:name="com.zing.zalo" />
 </queries>
+<!-- ZaloFlutter end -->
 ```
-
-**Note:** 
-- With app target Android 11 (API >=30), add this info for open Zalo app
-```xml
-<queries>
-    <package android:name="com.zing.zalo">
-</queries>
-```
-- With app target Android 12 (API >=31), add `android:exported="true"` for get callback when login with Browser
 
 3. Create file `strings.xml`(if not exists) on folder `/android/app/src/main/res/values/strings.xml`. Replace with your ZaloAppID
 
@@ -124,8 +119,8 @@ Paste **HashKey** and **YourPackageName** to this page and press **Save**
 ```kotlin
 package [YourPackageName]
 
-import android.content.Intent
 import io.flutter.embedding.android.FlutterActivity
+import android.content.Intent // <-- Add this line
 import com.zing.zalo.zalosdk.oauth.ZaloSDK // <-- Add this line
 
 class MainActivity: FlutterActivity() {
@@ -162,12 +157,12 @@ class MyApplication : FlutterApplication(), PluginRegistry.PluginRegistrantCallb
 ```java
 package [YourPackageName];
 
-import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;
-import io.flutter.embedding.engine.FlutterEngine;
-import io.flutter.plugins.GeneratedPluginRegistrant;
+import androidx.annotation.NonNull; // <-- Add this line
+import io.flutter.embedding.engine.FlutterEngine; // <-- Add this line
+import io.flutter.plugins.GeneratedPluginRegistrant; // <-- Add this line
 
-import android.content.Intent;
+import android.content.Intent; // <-- Add this line
 import com.zing.zalo.zalosdk.oauth.ZaloSDK; // Add this line
 
 public class MainActivity extends FlutterActivity {
