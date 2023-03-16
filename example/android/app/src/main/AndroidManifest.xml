@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
    <application
         android:label="example"
-        android:name="${applicationName}"
+        android:name=".MyApplication"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -31,5 +31,28 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- ZaloFlutter start -->
+        <meta-data
+            android:name="com.zing.zalo.zalosdk.appID"
+            android:value="@string/zalo_flutter_app_id" />
+        <activity
+            android:name="com.zing.zalo.zalosdk.oauth.BrowserLoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="@string/zalo_flutter_app_id_protocol"/>
+            </intent-filter>
+        </activity>
+        <!-- ZaloFlutter end -->
+        
     </application>
+
+    <!-- ZaloFlutter start -->
+    <queries>
+        <package android:name="com.zing.zalo" />
+    </queries>
+    <!-- ZaloFlutter end -->
 </manifest>
