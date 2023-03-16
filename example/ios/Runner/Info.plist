@@ -47,5 +47,27 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- ZaloFlutter start-->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>zalo</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>zalo-1220224634734709785</string>
+			</array>
+		</dict>
+	</array>
+	<key>ZaloAppID</key>
+	<string>1220224634734709785</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>zalosdk</string>
+		<string>zaloshareext</string>
+	</array>
+	<!-- ZaloFlutter end-->
 </dict>
 </plist>

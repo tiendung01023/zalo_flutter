@@ -233,7 +233,7 @@ public class MyApplication extends Application {
 ```swift
 import UIKit
 import Flutter
-import ZaloSDK
+import ZaloSDK // Add this line
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
