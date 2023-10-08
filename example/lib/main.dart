@@ -81,7 +81,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       print("login: $data");
                       if (data?['isSuccess'] == true) {
                         _accessToken = data?["data"]["accessToken"] as String?;
-                        _refreshToken = data?["data"]["refreshToken"] as String?;
+                        _refreshToken =
+                            data?["data"]["refreshToken"] as String?;
                       }
                     } catch (e) {
                       print("login: $e");
@@ -114,7 +115,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 CommonButton(
                   text: 'getUserProfile',
                   onPressed: () async {
-                    final Map<dynamic, dynamic>? data = await ZaloFlutter.getUserProfile(
+                    final Map<dynamic, dynamic>? data =
+                        await ZaloFlutter.getUserProfile(
                       accessToken: _accessToken ?? '',
                     );
                     return data;
@@ -255,7 +257,8 @@ class _CommonButtonState extends State<CommonButton> {
       }
       String data;
       try {
-        final Map<String, dynamic>? object = jsonDecode(text) as Map<String, dynamic>?;
+        final Map<String, dynamic>? object =
+            jsonDecode(text) as Map<String, dynamic>?;
         data = const JsonEncoder.withIndent('  ').convert(object);
       } catch (e) {
         data = text;

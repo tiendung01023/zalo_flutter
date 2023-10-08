@@ -35,9 +35,11 @@ class _ZaloHashKeyAndroidState extends State<ZaloHashKeyAndroid> {
             children: [
               Text("HashKey ANDROID", textAlign: TextAlign.center),
               Text("Copy it to Dashboard", textAlign: TextAlign.center),
-              Text("[https://developers.zalo.me/app/{your_app_id}/login]", textAlign: TextAlign.center),
+              Text("[https://developers.zalo.me/app/{your_app_id}/login]",
+                  textAlign: TextAlign.center),
               Text(_hashKey ?? '',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center),
               ElevatedButton(
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: _hashKey ?? ''));

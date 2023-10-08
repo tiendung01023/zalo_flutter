@@ -24,7 +24,9 @@ class ZaloFlutter {
   /// * Dashboard: https://developers.zalo.me/app/{your_app_id}/login
   static Future<String?> getHashKeyAndroid() async {
     if (Platform.isAndroid) {
-      final String? rs = await channel.invokeMethod<String?>('getHashKey').setTimeout(_timeout);
+      final String? rs = await channel
+          .invokeMethod<String?>('getHashKey')
+          .setTimeout(_timeout);
       return rs;
     }
     return null;
@@ -36,7 +38,9 @@ class ZaloFlutter {
   static String _getCodeVerifier() {
     const int length = 43;
     final Random random = Random.secure();
-    final String verifier = base64UrlEncode(List<int>.generate(length, (_) => random.nextInt(256))).split('=')[0];
+    final String verifier =
+        base64UrlEncode(List<int>.generate(length, (_) => random.nextInt(256)))
+            .split('=')[0];
     return verifier;
   }
 
@@ -44,7 +48,9 @@ class ZaloFlutter {
   /// * Get CodeChallenge for PCKE authencation
   /// * More info: https://developers.zalo.me/docs/sdk/ios-sdk/dang-nhap/dang-nhap-post-6006
   static String _getCodeChallenge(String codeVerifier) {
-    final String rs = base64UrlEncode(sha256.convert(ascii.encode(codeVerifier)).bytes).split('=')[0];
+    final String rs =
+        base64UrlEncode(sha256.convert(ascii.encode(codeVerifier)).bytes)
+            .split('=')[0];
     return rs;
   }
 
@@ -84,7 +90,8 @@ class ZaloFlutter {
   }) async {
     final String codeVerifier = ZaloFlutter._getCodeVerifier();
     final String codeChallenge = ZaloFlutter._getCodeChallenge(codeVerifier);
-    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
+    final Map<dynamic, dynamic>? rs =
+        await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'login',
       <String, dynamic>{
         'codeVerifier': codeVerifier,
@@ -105,7 +112,8 @@ class ZaloFlutter {
     required String accessToken,
   }) async {
     final String newAccessToken = accessToken == '' ? 'x' : accessToken;
-    final Map<dynamic, dynamic>? rs = await channel.invokeMethod<Map<dynamic, dynamic>?>(
+    final Map<dynamic, dynamic>? rs =
+        await channel.invokeMethod<Map<dynamic, dynamic>?>(
       'getUserProfile',
       <String, dynamic>{
         'accessToken': newAccessToken,
@@ -245,7 +253,8 @@ class ZaloFlutter {
 // }
 
 extension _InvokeMethodExt<T> on Future<T> {
-  Future<T?> setTimeout(Duration timeout, {FutureOr<T> Function()? onTimeout}) async {
+  Future<T?> setTimeout(Duration timeout,
+      {FutureOr<T> Function()? onTimeout}) async {
     try {
       return await this.timeout(timeout, onTimeout: onTimeout);
     } catch (e) {
