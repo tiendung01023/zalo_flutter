@@ -85,19 +85,6 @@ class ZaloFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     @Throws(Exception::class)
     private fun getHashKey(result: Result) {
         val key = AppHelper.getHashKey(context)
-        Log.v(
-            channelName,
-            "------------------------------------------------------------------------------------------------"
-        )
-        Log.v(
-            channelName,
-            "HashKey ANDROID. Copy it to Dashboard [https://developers.zalo.me/app/{your_app_id}/login]"
-        )
-        Log.v(channelName, key)
-        Log.v(
-            channelName,
-            "------------------------------------------------------------------------------------------------"
-        )
         result.success(key)
     }
 

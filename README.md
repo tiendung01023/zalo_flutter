@@ -78,24 +78,12 @@ minSdkVersion 21 // or bigger
 </resources>
 ```
 
-4. Open file `main.dart` and add this function to get HashKey
+4. Open file `main.dart` and add this widget to get HashKey
 
 ```dart
-  @override
-  void initState() {
-    super.initState();
-    _initZaloFlutter(); // Add this line
-  }
-
-  // Add this function
-  Future<void> _initZaloFlutter() async {
-    if (Platform.isAndroid) {
-      final hashKey = await ZaloFlutter.getHashKeyAndroid();
-      log('HashKey: $hashKey');
-    }
-  }
+    const ZaloHashKeyAndroid(),
 ```
-Then, you see Debug console and copy **HashKey**
+Then, you build app and copy **HashKey**
 ![](readme_assets/5.png)
 
 5. Open Zalo Dashboard => Login => Android (https://developers.zalo.me/app/[ZaloAppID]/login)
@@ -103,6 +91,8 @@ Then, you see Debug console and copy **HashKey**
 Paste **HashKey** and **YourPackageName** to this page and press **Save**
 
 ![](readme_assets/6.png)
+
+**NOTE**: If you upload file .aab to Google Store, it will generate another HashKey, copy it to Dashboard.
 
 6. Add proguard for zaloSDK
 ```
@@ -308,6 +298,8 @@ ZaloProfile data = await ZaloFlutter.getUserProfile(
 **Pham Tien Dung**
 
 If you have any questions, feel free to message me right away
+
+![](readme_assets/8.png)
 
 **Gmail:** tiendung01023@gmail.com
 
