@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Example</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -11,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>zalo_flutter_example</string>
+	<string>example</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -41,7 +43,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<!-- ZaloFlutter -->
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<!-- ZaloFlutter start-->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -51,11 +57,17 @@
 			<string>zalo</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>zalo-49043287940421924</string>
+				<string>zalo-1220224634734709785</string>
 			</array>
 		</dict>
 	</array>
 	<key>ZaloAppID</key>
-	<string>49043287940421924</string>
+	<string>1220224634734709785</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>zalosdk</string>
+		<string>zaloshareext</string>
+	</array>
+	<!-- ZaloFlutter end-->
 </dict>
 </plist>

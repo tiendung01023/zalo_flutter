@@ -1,4 +1,4 @@
-package com.tiendung01023.zalo_flutter_example
+package com.tiendung01023.example
 
 import io.flutter.app.FlutterApplication
 import io.flutter.plugin.common.PluginRegistry

@@ -1,5 +1,6 @@
 import UIKit
 import Flutter
+import ZaloSDK // Add this line
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
@@ -10,4 +11,9 @@ import Flutter
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
+    
+    // Zalo function go here
+    override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        return ZDKApplicationDelegate.sharedInstance().application(app, open: url, options: options)
+    }
 }

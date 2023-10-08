@@ -18,7 +18,7 @@ A new flutter plugin project.
   s.dependency 'ZaloSDK'
   s.static_framework = true
   s.ios.deployment_target = '9.0'
-  s.platform = :ios, '8.0'
+  s.platform = :ios, '9.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
