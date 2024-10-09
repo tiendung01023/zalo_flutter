@@ -5,6 +5,7 @@ A Flutter plugin for [Zalo APIs](https://developers.zalo.me/docs).
 _Note_: This plugin is still under development, and some APIs might not be
 available yet. [Feedback](https://github.com/tiendung01023/zalo_flutter/issues) and
 [Pull Requests](https://github.com/tiendung01023/zalo_flutter/pulls) are most welcome!
+(Mình đang khá bận nên không có thời gian cập nhật liên tục, các bạn gặp khó khăn cứ zalo cho mình ở dưới, nếu thư viện có lỗi mong các bạn gửi mình Pull Request để mình cập nhật nhé. Cảm ơn mọi người rất nhiều.)
 
 ## 1. Setup
 
@@ -101,6 +102,7 @@ Paste **HashKey** and **YourPackageName** to this page and press **Save**
 -keep interface com.zing.zalo.**{ *; }
 ```
 
+### Note: Phần này mình chia Kotlin và Java, tuỳ theo Project các bạn setup cho đúng nha ^^
 #### Continue with Kotlin
 ![](readme_assets/3.png)
 
@@ -268,7 +270,7 @@ String? data = await ZaloFlutter.getHashKeyAndroid();
 - Authenticate (with app or webview)
 
 ```dart
-ZaloLogin data = await ZaloFlutter.login(
+final data = await ZaloFlutter.login(
     refreshToken: refreshToken,
 );
 ```
@@ -289,7 +291,7 @@ bool data = await ZaloFlutter.validateRefreshToken(
 
 - Get Zalo user profile
 ```dart
-ZaloProfile data = await ZaloFlutter.getUserProfile(
+final data = await ZaloFlutter.getUserProfile(
     accessToken: accessToken,
 );
 ```
