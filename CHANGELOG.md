@@ -1,6 +1,13 @@
+## 0.0.8
+- Fix issue #16
+
+## 0.0.7
+- Fix login on Android 14 Increase version compileSdkVersion = 34 
+- Increase version targetSdkVersion = 34
+
 ## 0.0.6
-Fix login on Android
-Increase version ext.kotlin_version = '1.5.20'
+- Fix login on Android
+- Increase version ext.kotlin_version = '1.5.20'
 
 ## 0.0.5
 Hot-fix login iOS

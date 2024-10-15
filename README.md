@@ -29,6 +29,8 @@ To use this plugin, follow the [plugin installation instructions](https://pub.de
 
 ```gradle
 minSdkVersion 21 // or bigger
+compileSdkVersion 34 // or bigger
+targetSdkVersion 34 // or bigger
 ```
 
 2. Open to `/android/app/src/main/AndroidManifest.xml` and edit
@@ -102,7 +104,7 @@ Paste **HashKey** and **YourPackageName** to this page and press **Save**
 -keep interface com.zing.zalo.**{ *; }
 ```
 
-### Note: Phần này mình chia Kotlin và Java, tuỳ theo Project các bạn setup cho đúng nha ^^
+🍄🍄🍄 Note: Phần này mình chia Kotlin và Java, tuỳ theo Project các bạn setup cho đúng nha ^^
 #### Continue with Kotlin
 ![](readme_assets/3.png)
 
